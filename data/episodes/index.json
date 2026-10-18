@@ -2,6 +2,31 @@
   "episodes": [
     {
       "week": {
+        "startDate": "2026-10-11",
+        "endDate": "2026-10-17"
+      },
+      "title": "Émeraude-Acier prend la file",
+      "summary": "Le volume explose en best-of-one comme en best-of-three, et Émeraude-Acier grimpe de 4 à 5 points face à un Ambre-Émeraude toujours en tête mais en recul. Camille et Sacha se disputent la vraie force du nouveau favori, entre avantage du premier joueur et écart entre les formats.",
+      "formats": [
+        {
+          "format": "bo1",
+          "queue": "core-bo1@set-14-core",
+          "queueName": "Core Set 14 BO1"
+        },
+        {
+          "format": "bo3",
+          "queue": "core-bo3@set-14-core",
+          "queueName": "Core Set 14 BO3"
+        }
+      ],
+      "duration": 321,
+      "audio": "2026-10-11/episode.mp3",
+      "script": "2026-10-11/script.json",
+      "scriptModel": "claude-sonnet-5-5",
+      "voiceModel": "gpt-4o-mini-tts"
+    },
+    {
+      "week": {
         "startDate": "2026-10-04",
         "endDate": "2026-10-10"
       },

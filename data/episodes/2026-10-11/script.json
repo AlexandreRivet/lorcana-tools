@@ -1,0 +1,167 @@
+{
+  "week": {
+    "startDate": "2026-10-11",
+    "endDate": "2026-10-17"
+  },
+  "formats": [
+    {
+      "format": "bo1",
+      "queue": "core-bo1@set-14-core",
+      "queueName": "Core Set 14 BO1"
+    },
+    {
+      "format": "bo3",
+      "queue": "core-bo3@set-14-core",
+      "queueName": "Core Set 14 BO3"
+    }
+  ],
+  "model": "claude-sonnet-5-5",
+  "title": "Émeraude-Acier prend la file",
+  "summary": "Le volume explose en best-of-one comme en best-of-three, et Émeraude-Acier grimpe de 4 à 5 points face à un Ambre-Émeraude toujours en tête mais en recul. Camille et Sacha se disputent la vraie force du nouveau favori, entre avantage du premier joueur et écart entre les formats.",
+  "lines": [
+    {
+      "speaker": "camille",
+      "text": "Bonjour à toutes et à tous, c'est dimanche, et voici la semaine du 11 au 17 octobre. Gros morceau : plus de 137 000 parties en best-of-one sur la file Core Set 14, près de 320 % de plus que la semaine d'avant. Ça s'est rué sur le ladder.",
+      "start": 0,
+      "end": 16.5
+    },
+    {
+      "speaker": "sacha",
+      "text": "Et 31 858 matchs en best-of-three, plus 286 %. Je fais mon rabat-joie : la semaine précédente était toute mince, donc chaque évolution se mesure à une base fragile. Mon hypothèse, c'est que la file s'est remplie d'un coup. Pourquoi, je n'en sais rien.",
+      "start": 16.85,
+      "end": 32.46
+    },
+    {
+      "speaker": "camille",
+      "text": "Rabat-joie, ton deuxième prénom. Allez, best-of-one. Ambre-Émeraude reste le plus joué avec 18,9 %, mais il lâche 1,6 point. Et Émeraude-Acier bondit de 4,4 points, à 16,4 %. Pour moi, c'est le nouveau patron.",
+      "start": 32.81,
+      "end": 49.86
+    },
+    {
+      "speaker": "sacha",
+      "text": "Patron, patron. Ambre-Émeraude est encore premier, et son taux de victoire est à 52,1 %, nettement au-dessus de 50 %. Il perd 1,4 point, c'est vrai, et là, ce n'est pas du bruit. Mais déchu, non.",
+      "start": 50.21,
+      "end": 65.75
+    },
+    {
+      "speaker": "camille",
+      "text": "Concrètement, en face, tu vas croiser Émeraude-Acier, et lui est à 54,2 %. Le meilleur de la file. Tu le prends, point final.",
+      "start": 66.1,
+      "end": 75.67
+    },
+    {
+      "speaker": "sacha",
+      "text": "Regarde d'où viennent ces 54,2. À jouer en premier, 62,1 %. En second, 46,7 %. Plus de 15 points d'écart. Et le premier joueur gagne 56,8 % des parties cette semaine. En best-of-one, une part de ce taux, c'est la pièce.",
+      "start": 76.02,
+      "end": 95.97
+    },
+    {
+      "speaker": "camille",
+      "text": "Le tirage, tu le subis avec tous les decks. Lui, il punit quand il commence, et c'est exactement pour ça que je le veux. Et ne me dis pas que son taux de victoire a baissé, il est dans le bruit statistique.",
+      "start": 96.32,
+      "end": 108.76
+    },
+    {
+      "speaker": "sacha",
+      "text": "Je ne dis rien du tout, je constate qu'il ne bouge pas de façon lisible. Mais on a fait du chemin : tu admets que sa force dépend de la pièce.",
+      "start": 109.11,
+      "end": 118.66
+    },
+    {
+      "speaker": "camille",
+      "text": "J'admets que ça m'est égal. Autre chose, qui fait mal à mon petit cœur : Ambre-Rubis. 6 % de jeu, 45,2 % de victoire, en dessous de 50 %. Et face à Émeraude-Acier, il prend 63,7 % dans la figure, sur près de 2 500 parties.",
+      "start": 119.01,
+      "end": 138.61
+    },
+    {
+      "speaker": "sacha",
+      "text": "Là, l'échantillon est gros, ça se lit sans précaution. Ton Rubis est un goût, pas un fait. À l'inverse, Ambre-Saphir est le troisième deck le plus joué, avec 14,6 %, et il est à 50 % pile. Ni bon ni mauvais, juste là.",
+      "start": 138.96,
+      "end": 154.02
+    },
+    {
+      "speaker": "camille",
+      "text": "Donc on passe en best-of-three, là où tu te sens chez toi.",
+      "start": 154.37,
+      "end": 158.58
+    },
+    {
+      "speaker": "sacha",
+      "text": "Exactement, et l'image ressemble beaucoup. Ambre-Émeraude à 19,6 % de jeu, Émeraude-Acier à 17,8 %, en hausse de 5 points. Mais regarde le taux de victoire d'Ambre-Émeraude : 53,4 %, contre 56,7 % la semaine d'avant. C'est une baisse nette, et la plus marquée de ce format.",
+      "start": 158.93,
+      "end": 180.06
+    },
+    {
+      "speaker": "camille",
+      "text": "Ha ! Donc je disais vrai, il se fait dépasser.",
+      "start": 180.41,
+      "end": 183.76
+    },
+    {
+      "speaker": "sacha",
+      "text": "Il se fait rattraper en taux de victoire, pas dépasser en popularité. Et Émeraude-Acier est à 56,2 %. Ici, à jouer en second, il reste à 53,3 %, donc au-dessus de 50. Le premier joueur ne gagne que 53,1 % en best-of-three. Je te concède que ça renforce ton argument.",
+      "start": 184.11,
+      "end": 209.65
+    },
+    {
+      "speaker": "camille",
+      "text": "Mets ça par écrit. Tu concèdes, Sacha.",
+      "start": 210,
+      "end": 213.64
+    },
+    {
+      "speaker": "sacha",
+      "text": "Je concède sur ce point précis. Le même deck, 62 % à jouer en premier en best-of-one, 60 % en best-of-three. Sa vraie force se lit mieux quand on peut rejouer la partie.",
+      "start": 213.99,
+      "end": 227.71
+    },
+    {
+      "speaker": "camille",
+      "text": "Il y a un deck qui fuit partout, par contre : Émeraude-Saphir. Moins 2,2 points de jeu dans les deux formats.",
+      "start": 228.06,
+      "end": 235.1
+    },
+    {
+      "speaker": "sacha",
+      "text": "Et ça se comprend. En best-of-three, Ambre-Émeraude le bat dans 70,4 % des matchs, sur 538 matchs. Face aux deux leaders, il se fait manger. En best-of-one, c'est 61,4 % pour Ambre-Émeraude, sur plus de 2 700 parties. Les joueurs ont lu les matchups.",
+      "start": 235.45,
+      "end": 254.82
+    },
+    {
+      "speaker": "camille",
+      "text": "Un truc qui diverge entre les formats, ou pas ?",
+      "start": 255.17,
+      "end": 259.05
+    },
+    {
+      "speaker": "sacha",
+      "text": "Améthyste-Acier. En best-of-one, 50,4 %, pas distinguable de 50. En best-of-three, 48,5 %, en dessous. C'est un petit écart, donc je ne m'emballe pas, mais ça mérite qu'on regarde si ça se confirme.",
+      "start": 259.4,
+      "end": 274.79
+    },
+    {
+      "speaker": "camille",
+      "text": "Bon, la semaine prochaine, moi, je surveille si Émeraude-Acier continue de grimper et s'il ravit la première place en taux de jeu. Et si Ambre-Émeraude s'enfonce encore ou s'il se stabilise.",
+      "start": 275.14,
+      "end": 287.29
+    },
+    {
+      "speaker": "sacha",
+      "text": "Moi, je regarde d'abord si le volume se calme, parce que comparer à une semaine plus solide rendra les évolutions plus fiables. Et surtout le taux de victoire d'Émeraude-Acier quand il joue en second en best-of-one. S'il remonte au-dessus de 50, je m'incline.",
+      "start": 287.64,
+      "end": 306.23
+    },
+    {
+      "speaker": "camille",
+      "text": "Je note. Cet épisode est généré automatiquement à partir des statistiques de duels.ink, et les voix aussi. Bonne semaine et bons duels à tous.",
+      "start": 306.58,
+      "end": 315.95
+    },
+    {
+      "speaker": "sacha",
+      "text": "Les graphes sont sur Discord, pour vérifier que je n'ai rien inventé. À dimanche.",
+      "start": 316.3,
+      "end": 320.57
+    }
+  ]
+}
