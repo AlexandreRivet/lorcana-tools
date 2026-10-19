@@ -1,10 +1,10 @@
 /**
  * The week's figures for the podcast script, taken from a report: rounded, labelled in French
- * and already qualified (a change within the noise says so), so the model only tells them and
+ * (decks by their plain colours, « jaune-vert », as the hosts say them) and already qualified (a change within the noise says so), so the model only tells them and
  * never computes or reads intervals itself. Pure functions.
  */
 import { formatWeekRange } from './format.js';
-import { deckName } from './inks.js';
+import { deckColorName } from './inks.js';
 
 /** Weeks of play-rate history given per deck. */
 const HISTORY_WEEKS = 6;
@@ -26,7 +26,7 @@ function deckFacts(deck, rank) {
   const { history, playDraw } = deck;
   return {
     rank,
-    deck: deckName(deck.colors),
+    deck: deckColorName(deck.colors),
     playRate: round1(deck.playRate),
     playRateLastWeek: round1(deck.previous?.playRate),
     playRateChange: round1(deck.deltaPlayRate),
@@ -52,7 +52,7 @@ function matchupFacts(report, relevance) {
   if (!relevance.matchups.ok) return { reliable: false, reason: relevance.matchups.reason };
   const { cells, weeks } = report.matchups;
   const top = new Set(report.decks.slice(0, MATCHUP_DECKS).map((d) => d.key));
-  const named = new Map(report.decks.map((d) => [d.key, deckName(d.colors)]));
+  const named = new Map(report.decks.map((d) => [d.key, deckColorName(d.colors)]));
   const solid = cells.filter(
     (c) =>
       !c.mirror &&
@@ -90,7 +90,7 @@ function matchupFacts(report, relevance) {
  */
 export function buildPodcastFacts(report, relevance) {
   const { week, previousWeek, unit, summary, decks } = report;
-  const name = (deck) => (deck ? deckName(deck.colors) : null);
+  const name = (deck) => (deck ? deckColorName(deck.colors) : null);
   const volumeChange = previousWeek?.sampleSize
     ? round1((100 * (week.sampleSize - previousWeek.sampleSize)) / previousWeek.sampleSize)
     : null;
