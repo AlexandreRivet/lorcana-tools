@@ -1,6 +1,7 @@
 /**
  * Content of the Discord card posted with the Sunday charts (in French, for the team).
- * Decks appear as their inks in coloured-circle emoji, like the chips in the charts.
+ * Decks appear as their inks in coloured-circle emoji, like the chips in the charts, followed
+ * by their archetype's name in a report by archetype.
  * Kept short on purpose: the charts carry the detail (intervals, counts, matchups).
  */
 import {
@@ -15,6 +16,10 @@ import { deckEmoji } from './inks.js';
 
 /** Rising / falling decks listed in the card, per direction. */
 const MOVERS = 2;
+
+/** "🟢⚪ Midrange · He Hurled", or "🟢⚪" by inks. */
+const deckText = (deck) =>
+  deck.label ? `${deckEmoji(deck.colors)} ${deck.label}` : deckEmoji(deck.colors);
 
 export function buildDigestCard(report, relevance) {
   const { week, previousWeek, summary, unit } = report;
@@ -39,19 +44,20 @@ export function buildDigestCard(report, relevance) {
   const movers = (decks) =>
     decks
       .slice(0, MOVERS)
-      .map((d) => `${deckEmoji(d.colors)} ${formatDelta(d.deltaPlayRate)} pt`)
+      .map((d) => `${deckText(d)} ${formatDelta(d.deltaPlayRate)} pt`)
       .join(' · ');
 
   const lines = [volume];
+  if (report.view === 'archetypes' && report.coverage != null) {
+    lines.push(`Par archétype · ${formatPct(100 * report.coverage, 0)} des decks reconnus`);
+  }
   if (topDeck) {
-    lines.push(`Le plus joué : ${deckEmoji(topDeck.colors)} ${formatPct(topDeck.playRate)}`);
+    lines.push(`Le plus joué : ${deckText(topDeck)} ${formatPct(topDeck.playRate)}`);
   }
   if (risers.length) lines.push(`En hausse : ${movers(risers)}`);
   if (fallers.length) lines.push(`En baisse : ${movers(fallers)}`);
   if (bestWinRate) {
-    lines.push(
-      `Meilleur win rate : ${deckEmoji(bestWinRate.colors)} ${formatPct(bestWinRate.winRate)}`,
-    );
+    lines.push(`Meilleur win rate : ${deckText(bestWinRate)} ${formatPct(bestWinRate.winRate)}`);
   }
 
   return { title, description: lines.join('\n'), footer };

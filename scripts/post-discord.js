@@ -55,12 +55,19 @@ function siteLink(pagePath, params) {
   return link.href;
 }
 
+/** Every chart of the meta page (its card ids), to open them all by archetype. */
+const PAGE_CHARTS = ['meta', 'carte', 'mouvements', 'evolution', 'matchups', 'fiche', 'premier'];
+
 /**
- * The meta page, opened on the digest's queue and week. The week matters: the page otherwise
- * opens on the week in progress, not the one the card describes.
+ * The meta page, opened on the digest's queue and week, in the digest's view. The week matters:
+ * the page otherwise opens on the week in progress, not the one the card describes.
  */
 const pageLink = (digest) =>
-  siteLink('meta/', { queue: digest.queue, week: digest.week.startDate });
+  siteLink('meta/', {
+    queue: digest.queue,
+    week: digest.week.startDate,
+    ...(digest.view === 'archetypes' ? { archetypes: PAGE_CHARTS.join(',') } : {}),
+  });
 
 /**
  * A digest's images, named after their format (bo1-meta.png): both formats' cards share one

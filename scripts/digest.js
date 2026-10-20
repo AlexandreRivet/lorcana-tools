@@ -4,6 +4,8 @@
 // The digest covers the last finished week, never the one in progress. A format whose queue has
 // no data for it is skipped, so a closed beta queue isn't posted again every Sunday. Charts
 // without enough data are left out; with none, the card is text only.
+// Decks are told apart by archetype, which more players recognise than an ink pair, when the
+// week has archetypes for most of its decks; otherwise by inks.
 // Usage: npm run digest [-- --week 2026-09-27] [-- --queue core-bo1] [-- --theme light]
 import { mkdir, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
@@ -16,7 +18,7 @@ import { moversChart } from '../src/charts/movers.js';
 import { themes } from '../src/charts/theme.js';
 import { config } from '../src/config.js';
 import { buildDigestCard } from '../src/lib/digest-message.js';
-import { buildReport, countsMatches } from '../src/lib/metrics.js';
+import { VIEWS, buildReport, countsMatches, hasArchetypes } from '../src/lib/metrics.js';
 import { buildPodcastFacts } from '../src/lib/podcast-facts.js';
 import { chartRelevance } from '../src/lib/relevance.js';
 import { lastFinishedWeekEnd, pickFeaturedQueue } from '../src/lib/queues.js';
@@ -27,6 +29,9 @@ export const OUT_DIR = fileURLToPath(new URL('../out/digest/', import.meta.url))
 
 // Posting order on Discord.
 const FORMATS = ['bo1', 'bo3'];
+
+/** Below this share of decks recognised as an archetype, the digest stays by inks. */
+const MIN_ARCHETYPE_COVERAGE = 0.5;
 const formatOf = (index) => (countsMatches(index) ? 'bo3' : 'bo1');
 
 const { values: args } = parseArgs({
@@ -85,6 +90,8 @@ async function renderDigest(report, trendReport, dir) {
   const digest = {
     queue: report.queue,
     week: report.week,
+    // colors | archetypes: the page link opens the charts in the same view
+    view: report.view,
     card: buildDigestCard(report, relevance),
     images: images.map(({ file }) => ({ file })),
   };
@@ -119,14 +126,22 @@ for (const format of FORMATS) {
     summary.skipped.push({ format, queue: index.queue });
     continue;
   }
-  const report = buildReport({ index, snapshots, weekStart });
-  if (!args.week && !args.queue && report.week.endDate < lastEnd) {
+  const inks = buildReport({ index, snapshots, weekStart });
+  if (!args.week && !args.queue && inks.week.endDate < lastEnd) {
     console.log(
-      `${label}: ${index.queue} has no data for the week ending ${lastEnd} (latest: ${report.week.endDate}), skipped.\n`,
+      `${label}: ${index.queue} has no data for the week ending ${lastEnd} (latest: ${inks.week.endDate}), skipped.\n`,
     );
     summary.skipped.push({ format, queue: index.queue });
     continue;
   }
+
+  // By archetype when most of the week's decks are recognised
+  const target = snapshots.find((s) => s.week.startDate === weekStart);
+  const byArchetype = hasArchetypes(target)
+    ? buildReport({ index, snapshots, weekStart, view: VIEWS.archetypes })
+    : null;
+  const view = byArchetype?.coverage >= MIN_ARCHETYPE_COVERAGE ? VIEWS.archetypes : VIEWS.colors;
+  const report = view === VIEWS.archetypes ? byArchetype : inks;
 
   const dir = path.join(OUT_DIR, format);
   // Same week, with the trend window cut to the week and the one before
@@ -134,11 +149,12 @@ for (const format of FORMATS) {
     index,
     snapshots,
     weekStart,
+    view,
     options: { trendWeeks: config.digestTrendWeeks },
   });
   const digest = await renderDigest(report, trendReport, dir);
-  // The podcast script's input (npm run podcast:script)
-  const facts = buildPodcastFacts(report, chartRelevance(report));
+  // The podcast script's input (npm run podcast:script): its hosts name decks by inks
+  const facts = buildPodcastFacts(inks, chartRelevance(inks));
   await writeFile(path.join(dir, 'facts.json'), `${JSON.stringify(facts, null, 2)}\n`);
   const { title, description } = digest.card;
   const files = digest.images.map((image) => image.file).join(', ') || 'no image';
