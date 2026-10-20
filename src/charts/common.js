@@ -6,7 +6,7 @@
 import { select } from 'd3';
 import { SOURCE_URL } from '../config.js';
 import { formatCount, formatUpdatedAt } from '../lib/format.js';
-import { INKS, deckName } from '../lib/inks.js';
+import { INKS, deckTitle } from '../lib/inks.js';
 import { FONT_FAMILY } from './theme.js';
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
@@ -103,12 +103,46 @@ export function inkChips(parent, colors, { x, y, theme, r = 5, name }) {
 /** Width taken by a deck label (its chips) at the default size. */
 export const DECK_LABEL_WIDTH = 23;
 
+/** Room for an archetype's name after its chips, in the charts that list decks in rows. */
+export const NAME_WIDTH = 124;
+
+/** Extra width a chart's deck column needs: archetype names by archetype, none by inks. */
+export const nameRoom = (decks) => (decks.some((d) => d.label) ? NAME_WIDTH : 0);
+
+/** `text` cut with an ellipsis to fit `width` at `size` (estimated, see textWidth). */
+export function fitText(text, width, size) {
+  const chars = Math.floor(width / (size * 0.53));
+  return text.length <= chars ? text : `${text.slice(0, Math.max(1, chars - 1))}…`;
+}
+
 /**
- * A deck's label: its ink chips, vertically centred on `y`. The name goes into an SVG <title>,
- * read by screen readers and shown when the chips are hovered on the page.
+ * A deck's label: its ink chips, vertically centred on `y`, then its archetype name if it has
+ * one, cut to `maxWidth`. The full name goes into an SVG <title>, read by screen readers and
+ * shown when the label is hovered on the page. Returns the width used.
  */
-export function deckLabel(parent, deck, { x, y, theme, r = 6 }) {
-  return inkChips(parent, deck.colors, { x, y, theme, r, name: deckName(deck.colors) });
+export function deckLabel(parent, deck, { x, y, theme, r = 6, size = 11, maxWidth = NAME_WIDTH }) {
+  const width = inkChips(parent, deck.colors, { x, y, theme, r, name: deckTitle(deck) });
+  if (!deck.label) return width;
+  const text = fitText(deck.label, maxWidth - 6, size);
+  parent
+    .append('text')
+    .attr('x', x + width + 6)
+    .attr('y', y + middle(size))
+    .attr('font-size', size)
+    .attr('fill', theme.text)
+    .text(text)
+    .append('title')
+    .text(deckTitle(deck));
+  return width + 6 + Math.min(textWidth(text, size), maxWidth - 6);
+}
+
+/** Width deckLabel will take for this deck. */
+export function deckLabelWidth(deck, { r = 6, size = 11, maxWidth = NAME_WIDTH } = {}) {
+  const chips = r * 2 + (deck.colors.length - 1) * (r * 2 - 1);
+  if (!deck.label) return chips;
+  return (
+    chips + 6 + Math.min(textWidth(fitText(deck.label, maxWidth - 6, size), size), maxWidth - 6)
+  );
 }
 
 /**

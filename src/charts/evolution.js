@@ -7,8 +7,18 @@
  */
 import { area, extent, line, max, scaleLinear } from 'd3';
 import { formatCount, formatDay, formatDelta, formatPct } from '../lib/format.js';
-import { deckName } from '../lib/inks.js';
-import { PAD, createSvg, deckLabel, finalize, footer, header, hitArea, middle } from './common.js';
+import { deckTitle } from '../lib/inks.js';
+import {
+  PAD,
+  createSvg,
+  deckLabel,
+  finalize,
+  fitText,
+  footer,
+  header,
+  hitArea,
+  middle,
+} from './common.js';
 
 const COLUMNS = 3;
 const GAP_X = 24;
@@ -103,7 +113,19 @@ export function evolutionChart(report, { document, theme, width = 800 }) {
     const panel = svg.append('g').attr('transform', `translate(${px},${py})`);
 
     // Panel header: chips on the left; each series' value and change on the right
-    deckLabel(panel, deck, { x: 0, y: 9, theme });
+    deckLabel(panel, { ...deck, label: null }, { x: 0, y: 9, theme });
+    // An archetype's name goes under its chips, clear of the play-rate change
+    if (deck.label) {
+      panel
+        .append('text')
+        .attr('x', 0)
+        .attr('y', 27 + middle(11))
+        .attr('font-size', 11)
+        .attr('fill', theme.text)
+        .text(fitText(deck.label, panelWidth - 94 - 52, 11))
+        .append('title')
+        .text(deckTitle(deck));
+    }
     const values = [
       {
         color: theme.accent,
@@ -271,7 +293,7 @@ export function evolutionChart(report, { document, theme, width = 800 }) {
         width: step,
         height: PLOT_HEIGHT,
         tip: [
-          `${deckName(deck.colors)} · semaine du ${formatDay(p.startDate)}`,
+          `${deckTitle(deck)} · semaine du ${formatDay(p.startDate)}`,
           `Popularité ${formatPct(p.playRate)} · win rate ${formatPct(p.winRate)}`,
           p.ci
             ? `IC 95 % du win rate : ${formatPct(p.ci[0])} – ${formatPct(p.ci[1])} · ${formatCount(

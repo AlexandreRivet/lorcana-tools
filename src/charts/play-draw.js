@@ -5,15 +5,28 @@
  */
 import { max, min, scaleLinear } from 'd3';
 import { formatCount, formatDelta, formatPct, formatWeekRange } from '../lib/format.js';
-import { deckName } from '../lib/inks.js';
-import { PAD, createSvg, deckLabel, finalize, footer, header, hitArea, middle } from './common.js';
+import { deckTitle } from '../lib/inks.js';
+import {
+  PAD,
+  createSvg,
+  deckLabel,
+  finalize,
+  footer,
+  header,
+  hitArea,
+  middle,
+  nameRoom,
+} from './common.js';
 
 const ROW_HEIGHT = 28;
 
 export function playDrawChart(report, { document, theme, width = 800 }) {
-  const { decks, unit } = report;
+  const { decks } = report;
+  // Matchup figures: games by archetype, even in BO3
+  const unit = report.matchups.unit ?? report.unit;
   const { weeks, endDate, firstPlayerWinRate, sampleSize, updatedAt } = report.matchups;
-  const bo3 = report.gameMode === 'bo3';
+  // In BO3 by inks the first player is who starts game 1; by archetype, figures are per game
+  const bo3 = report.gameMode === 'bo3' && unit === report.unit;
   const goesFirst = bo3 ? 'commence la 1re partie' : 'commence';
   const title = 'Commencer ou jouer en second';
   const svg = createSvg(document, { width, title, theme });
@@ -40,7 +53,7 @@ export function playDrawChart(report, { document, theme, width = 800 }) {
   }
 
   const rows = decks.filter((d) => d.playDraw.onPlay.games && d.playDraw.onDraw.games);
-  const col = { deck: PAD, plotFrom: 80, plotTo: 680, gap: width - PAD };
+  const col = { deck: PAD, plotFrom: 80 + nameRoom(decks), plotTo: 680, gap: width - PAD };
   const rates = rows.flatMap((d) => [d.playDraw.onPlay.winRate, d.playDraw.onDraw.winRate]);
   const x = scaleLinear()
     .domain([Math.min(48, min(rates)), Math.max(52, max(rates))])
@@ -146,7 +159,7 @@ export function playDrawChart(report, { document, theme, width = 800 }) {
       width: width - 2 * PAD,
       height: ROW_HEIGHT,
       tip: [
-        deckName(deck.colors),
+        deckTitle(deck),
         `${formatDelta(gap)} pts en commençant`,
         `En commençant : ${formatPct(onPlay.winRate)} sur ${formatCount(Math.round(onPlay.games), unit)}`,
         `En second : ${formatPct(onDraw.winRate)} sur ${formatCount(Math.round(onDraw.games), unit)}`,

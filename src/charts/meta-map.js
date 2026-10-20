@@ -6,10 +6,23 @@
  */
 import { max, median, min, scaleLinear } from 'd3';
 import { formatCount, formatPct, formatWeek } from '../lib/format.js';
-import { INKS, deckName } from '../lib/inks.js';
-import { PAD, createSvg, finalize, footer, header, inkChips, middle } from './common.js';
+import { INKS, deckTitle } from '../lib/inks.js';
+import {
+  PAD,
+  createSvg,
+  finalize,
+  fitText,
+  footer,
+  header,
+  inkChips,
+  middle,
+  textWidth,
+} from './common.js';
 
 const PLOT_HEIGHT = 400;
+/** Archetype names on the map: small, and cut short so they don't hide other decks. */
+const MAP_NAME_SIZE = 10;
+const MAP_NAME_WIDTH = 110;
 const LEFT = 64;
 const CHIP_R = 6;
 /** Width of a deck's chips: two overlapping circles (or one for a mono-ink deck). */
@@ -207,6 +220,53 @@ export function metaMapChart(report, { document, theme, width = 800 }) {
       .attr('fill', second);
   }
 
+  // Archetype names next to the chips: right, left, above or below, wherever nothing is
+  // drawn yet; a name with no room left stays in the tooltip.
+  const taken = markers.map((m) => ({
+    x0: m.left - 2,
+    x1: m.left + m.width + 2,
+    y0: m.y - 8,
+    y1: m.y + 8,
+  }));
+  const overlaps = (box) =>
+    taken.some((t) => box.x0 < t.x1 && box.x1 > t.x0 && box.y0 < t.y1 && box.y1 > t.y0);
+  for (const m of [...markers].sort((a, b) => b.deck.playRate - a.deck.playRate)) {
+    if (!m.deck.label) continue;
+    const text = fitText(m.deck.label, MAP_NAME_WIDTH, MAP_NAME_SIZE);
+    const w = textWidth(text, MAP_NAME_SIZE);
+    const h = MAP_NAME_SIZE + 2;
+    const spots = [
+      { x: m.left + m.width + 4, y: m.y, anchor: 'start' },
+      { x: m.left - 4, y: m.y, anchor: 'end' },
+      { x: m.x, y: m.y - 14, anchor: 'middle' },
+      { x: m.x, y: m.y + 14, anchor: 'middle' },
+    ];
+    for (const spot of spots) {
+      const x0 =
+        spot.anchor === 'start' ? spot.x : spot.anchor === 'end' ? spot.x - w : spot.x - w / 2;
+      const box = { x0, x1: x0 + w, y0: spot.y - h / 2, y1: spot.y + h / 2 };
+      const inside =
+        box.x0 >= plot.x0 && box.x1 <= plot.x1 && box.y0 >= plot.y0 && box.y1 <= plot.y1;
+      if (!inside || overlaps(box)) continue;
+      taken.push(box);
+      svg
+        .append('text')
+        .attr('x', spot.x)
+        .attr('y', spot.y + middle(MAP_NAME_SIZE))
+        .attr('font-size', MAP_NAME_SIZE)
+        .attr('fill', theme.text2)
+        // A halo in the background colour keeps the name readable over an arrow
+        .attr('stroke', theme.surface)
+        .attr('stroke-width', 3)
+        .attr('stroke-linejoin', 'round')
+        .attr('paint-order', 'stroke')
+        .attr('text-anchor', spot.anchor)
+        .attr('pointer-events', 'none')
+        .text(text);
+      break;
+    }
+  }
+
   // Most played first, so the smaller decks end up on top where markers overlap
   for (const m of [...markers].sort((a, b) => b.deck.playRate - a.deck.playRate)) {
     const { deck } = m;
@@ -225,7 +285,7 @@ export function metaMapChart(report, { document, theme, width = 800 }) {
       .attr(
         'data-tip',
         [
-          deckName(deck.colors),
+          deckTitle(deck),
           `${formatPct(deck.winRate)} de victoires`,
           `IC 95 % : ${formatPct(deck.ci[0])} – ${formatPct(deck.ci[1])}`,
           `${formatPct(deck.playRate)} des decks · ${formatCount(deck.games, unit)}`,

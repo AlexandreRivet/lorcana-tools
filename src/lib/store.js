@@ -2,7 +2,7 @@
  * Reads and writes the collected data (Node only).
  *
  * data/<queue>/index.json         available weeks, eras, queue name
- * data/<queue>/weeks/<start>.json  snapshot of a finished week (stable fields only)
+ * data/<queue>/weeks/<start>.json  snapshot of a week (stable fields, plus archetypes if any)
  * data/episodes/index.json         podcast episodes, newest first
  * data/episodes/<start>/           an episode's script.json and episode.mp3
  */

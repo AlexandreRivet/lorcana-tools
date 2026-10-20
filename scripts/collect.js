@@ -27,7 +27,80 @@ async function fetchWithRetry(params, attempts = 4) {
   }
 }
 
-/** Keeps only the fields listed as stable in the API docs. */
+/**
+ * Archetypes, from the `profiles` and `archetypeMatchups` fields. They are outside the API's
+ * stable contract, so null when missing: the page then only offers the ink view.
+ * A profile is a deck list cluster, recomputed on every request (its id changes); several
+ * profiles share an archetype, whose id is stable from one week to the next. Profiles are
+ * summed per archetype, and their matchups stored once per pair (archetypeA < archetypeB),
+ * flipped to that side when needed.
+ */
+function toArchetypes({ profiles, archetypeMatchups }) {
+  if (!profiles?.length) return { archetypes: null, archetypeMatchups: null };
+
+  const archetypeOf = new Map();
+  const archetypes = new Map();
+  for (const p of profiles) {
+    if (!p.archetypeId) continue;
+    archetypeOf.set(p.id, p.archetypeId);
+    const a = archetypes.get(p.archetypeId) ?? {
+      id: p.archetypeId,
+      name: p.archetypeName ?? null,
+      slug: p.archetypeSlug ?? null,
+      colors: p.colors,
+      games: 0,
+      wins: 0,
+    };
+    a.games += p.gamesPlayed;
+    a.wins += p.wins;
+    archetypes.set(p.archetypeId, a);
+  }
+
+  const pairs = new Map();
+  for (const m of archetypeMatchups ?? []) {
+    let a = archetypeOf.get(m.archetypeIdA);
+    let b = archetypeOf.get(m.archetypeIdB);
+    if (!a || !b) continue;
+    let { games, winsA, firstPlayerGames } = m;
+    let firstPlayerWins =
+      m.firstPlayerWins ?? ((m.firstPlayerWinRate ?? 0) * firstPlayerGames) / 100;
+    if (a > b) {
+      // Seen from B: B goes first in the games A went second
+      [a, b] = [b, a];
+      const drawGames = games - firstPlayerGames;
+      firstPlayerWins = drawGames - (winsA - firstPlayerWins);
+      firstPlayerGames = drawGames;
+      winsA = games - winsA;
+    }
+    const row = pairs.get(`${a}|${b}`) ?? {
+      archetypeA: a,
+      archetypeB: b,
+      games: 0,
+      winsA: 0,
+      firstPlayerGames: 0,
+      firstPlayerWins: 0,
+    };
+    row.games += games;
+    row.winsA += winsA;
+    row.firstPlayerGames += firstPlayerGames;
+    row.firstPlayerWins += firstPlayerWins;
+    pairs.set(`${a}|${b}`, row);
+  }
+
+  return {
+    archetypes: [...archetypes.values()].sort((x, y) => y.games - x.games),
+    // Same shape as `matchups`, so both are summed the same way
+    archetypeMatchups: [...pairs.values()].map(({ firstPlayerWins, ...row }) => ({
+      ...row,
+      winRate: row.games ? (100 * row.winsA) / row.games : null,
+      firstPlayerWinRate: row.firstPlayerGames
+        ? (100 * firstPlayerWins) / row.firstPlayerGames
+        : null,
+    })),
+  };
+}
+
+/** Keeps only the fields listed as stable in the API docs, plus the archetypes when present. */
 function toSnapshot(queue, week, { data, etag }) {
   return {
     queue,
@@ -54,6 +127,7 @@ function toSnapshot(queue, week, { data, etag }) {
         firstPlayerWinRate,
       }),
     ),
+    ...toArchetypes(data),
   };
 }
 
@@ -76,14 +150,16 @@ async function collectQueue(id) {
   let written = 0;
   for (const week of weeks) {
     const stored = await readWeek(id, week.startDate);
-    if (stored && stored.totalGames === week.totalGames) continue;
+    // Weeks stored before the archetypes were kept are fetched once more to add them
+    const complete = stored && 'archetypes' in stored;
+    if (complete && stored.totalGames === week.totalGames) continue;
 
     await sleep(REQUEST_INTERVAL_MS);
     const res = await fetchWithRetry({
       queue,
       era,
       period: `week:${week.startDate}`,
-      etag: stored?.etag,
+      etag: complete ? stored.etag : undefined,
     });
     if (res.status === 304) continue;
     // With an era, meta.period is an opaque id: selectedEraKey tells the scope instead

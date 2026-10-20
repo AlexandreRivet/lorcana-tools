@@ -26,6 +26,42 @@ export function deckName(colors) {
   return colors.map(inkName).join(' / ');
 }
 
+/**
+ * "Max Goof Tod": an archetype's key cards, from its slug ("amber-emerald-max-goof-tod") once
+ * the inks are dropped. Stands in for archetypes duels.ink hasn't named.
+ */
+function slugCards({ slug, colors }) {
+  if (!slug) return null;
+  const words = slug.split('-');
+  while (words.length > 1 && colors.includes(words[0])) words.shift();
+  return words.map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+}
+
+/**
+ * Gives each archetype deck a `label` (shown next to its chips) and a `name` (with its inks,
+ * for tooltips and screen readers). Two archetypes of the same inks under one name ("Midrange")
+ * are told apart by their key cards.
+ */
+export function nameArchetypes(decks) {
+  const base = (d) => d.archetype ?? slugCards(d) ?? 'Sans nom';
+  const count = new Map();
+  for (const d of decks) {
+    const id = `${deckKey(d.colors)}|${base(d)}`;
+    count.set(id, (count.get(id) ?? 0) + 1);
+  }
+  for (const d of decks) {
+    const shared = count.get(`${deckKey(d.colors)}|${base(d)}`) > 1;
+    const cards = slugCards(d);
+    d.label = shared && d.archetype && cards ? `${d.archetype} · ${cards}` : base(d);
+    d.name = `${d.label} (${deckName(d.colors)})`;
+  }
+}
+
+/** A deck's full name: an archetype's, or its inks. */
+export function deckTitle(deck) {
+  return deck.name ?? deckName(deck.colors);
+}
+
 /** "jaune-vert": a deck by its plain colours, as the podcast hosts say it. */
 export function deckColorName(colors) {
   return colors.map((ink) => INKS[ink]?.colorName ?? ink).join('-');

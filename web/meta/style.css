@@ -7,12 +7,94 @@
   margin: 24px 0 20px;
 }
 
+.card-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+  padding: 16px 24px 0;
+}
+
 .card-control {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 16px 24px 0;
   color: var(--text-2);
+}
+
+/* Inks / archetypes switch: two joined buttons, the current view filled */
+.view-switch {
+  display: inline-flex;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.view-switch button {
+  padding: 3px 12px;
+  border: 0;
+  background: transparent;
+  color: var(--text-2);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.view-switch button + button {
+  border-left: 1px solid var(--border);
+}
+
+.view-switch button[aria-pressed='true'] {
+  background: var(--text);
+  color: var(--surface);
+}
+
+.view-switch button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.view-switch button:focus-visible {
+  outline: 2px solid var(--text);
+  outline-offset: -2px;
+}
+
+.view-note {
+  opacity: 0.75;
+}
+
+/*
+ * The switch sits top right, on the chart title's line. On narrow screens the scaled-down
+ * title has no room beside it: it then goes above the chart, as the deck sheet's picker does.
+ */
+.card {
+  position: relative;
+}
+
+.card-controls .view-switch {
+  margin-left: auto;
+}
+
+@media (min-width: 640px) {
+  .card-controls.switch-only {
+    display: contents;
+  }
+
+  .card-controls.switch-only .view-switch {
+    position: absolute;
+    top: 12px;
+    right: 20px;
+  }
+
+  .card-empty .card-controls.switch-only .view-switch {
+    top: 22px;
+  }
+}
+
+.deck-cell {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .kpis {
@@ -118,7 +200,7 @@
   padding: 24px;
 }
 
-.card-empty .card-control {
+.card-empty .card-controls {
   padding: 0 0 16px;
 }
 

@@ -5,7 +5,7 @@
  */
 import { scaleLinear } from 'd3';
 import { formatCount, formatInt, formatPct, formatWeekRange } from '../lib/format.js';
-import { deckName } from '../lib/inks.js';
+import { deckTitle } from '../lib/inks.js';
 import { wilson } from '../lib/metrics.js';
 import {
   PAD,
@@ -16,9 +16,9 @@ import {
   footer,
   header,
   hitArea,
-  inkChips,
   legendDot,
   middle,
+  nameRoom,
   textWidth,
 } from './common.js';
 
@@ -34,9 +34,10 @@ export const MATCHUP_SIGNAL_LABELS = {
 export function deckSheetChart(report, deckKey, { document, theme, width = 800 }) {
   const deck = report.decks.find((d) => d.key === deckKey) ?? report.decks[0];
   const { cells, weeks, endDate, sampleSize, updatedAt } = report.matchups;
-  const { unit } = report;
+  // Matchup figures: games by archetype, even in BO3
+  const unit = report.matchups.unit ?? report.unit;
   const minGames = report.options.minMatchupGames;
-  const name = deckName(deck.colors);
+  const name = deckTitle(deck);
   // The <title> keeps the name; the visible title shows the deck's chips
   const svg = createSvg(document, { width, title: `Fiche deck : ${name}`, theme });
 
@@ -49,12 +50,14 @@ export function deckSheetChart(report, deckKey, { document, theme, width = 800 }
     theme,
   });
 
-  inkChips(svg, deck.colors, {
+  // Chips, and the archetype's name when there is one
+  deckLabel(svg, deck, {
     x: PAD + textWidth('Fiche deck', 20) + 14,
     y: PAD + 16 - middle(20),
     theme,
     r: 8,
-    name,
+    size: 16,
+    maxWidth: width - 2 * PAD - textWidth('Fiche deck', 20) - 50,
   });
 
   const { onPlay, onDraw } = deck.playDraw;
@@ -84,10 +87,11 @@ export function deckSheetChart(report, deckKey, { document, theme, width = 800 }
     return { opponent, cell, enough, ci, signal };
   });
 
+  const room = nameRoom(report.decks);
   const col = {
     deck: PAD,
-    freq: 110,
-    plotFrom: 138,
+    freq: 110 + room,
+    plotFrom: 138 + room,
     plotTo: 610,
     value: 690,
     games: width - PAD,
@@ -144,7 +148,7 @@ export function deckSheetChart(report, deckKey, { document, theme, width = 800 }
     const rowTop = top + i * ROW_HEIGHT;
     const cy = rowTop + ROW_HEIGHT / 2;
     const row = svg.append('g');
-    const opponentName = deckName(opponent.colors);
+    const opponentName = deckTitle(opponent);
 
     if (i > 0) {
       row

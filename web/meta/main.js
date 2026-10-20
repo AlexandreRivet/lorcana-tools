@@ -17,7 +17,14 @@ import {
   formatWeekRange,
 } from '../../src/lib/format.js';
 import { INKS, deckEmoji, deckName } from '../../src/lib/inks.js';
-import { buildReport, countsMatches, sampleSize, wilson } from '../../src/lib/metrics.js';
+import {
+  VIEWS,
+  buildReport,
+  countsMatches,
+  hasArchetypes,
+  sampleSize,
+  wilson,
+} from '../../src/lib/metrics.js';
 import { isWeekComplete, pickFeaturedQueue } from '../../src/lib/queues.js';
 import { chartRelevance } from '../../src/lib/relevance.js';
 
@@ -31,7 +38,8 @@ const indexCache = new Map();
 const cache = new Map();
 const state = readUrlState();
 let featuredQueue = null;
-let lastReport = null;
+// The week's reports, by inks and by archetype (null when the week has no archetypes)
+let lastReports = null;
 let renderToken = 0;
 
 function el(tag, attrs = {}, text) {
@@ -85,6 +93,8 @@ function readUrlState() {
     matchupWeeks: Number(params.get('matchups')) || config.matchupWeeks,
     // Deck shown in the deck sheet (null: the most played one).
     deck: params.get('deck'),
+    // Charts shown by archetype rather than by inks
+    archetypes: new Set(params.get('archetypes')?.split(',').filter(Boolean) ?? []),
   };
 }
 
@@ -94,6 +104,7 @@ function writeUrlState() {
   if (state.week) params.set('week', state.week);
   if (state.matchupWeeks !== config.matchupWeeks) params.set('matchups', state.matchupWeeks);
   if (state.deck) params.set('deck', state.deck);
+  if (state.archetypes.size) params.set('archetypes', [...state.archetypes].join(','));
   const query = params.toString();
   history.replaceState(null, '', query ? `?${query}` : location.pathname);
 }
@@ -163,6 +174,14 @@ function chips(colors) {
     wrapper.append(chip);
   }
   wrapper.append(el('span', { class: 'sr-only' }, deckName(colors)));
+  return wrapper;
+}
+
+/** A deck in a table: its chips, then its archetype's name if it has one. */
+function deckCell(deck) {
+  if (!deck.label) return chips(deck.colors);
+  const wrapper = el('span', { class: 'deck-cell' });
+  wrapper.append(chips(deck.colors), el('span', {}, deck.label));
   return wrapper;
 }
 
@@ -248,7 +267,7 @@ function metaTableView(report) {
   return table(
     ['Deck', 'Popularité', 'Δ pts vs S−1', 'Win rate', 'IC 95 %', capitalize(report.unit.many)],
     report.decks.map((d) => [
-      chips(d.colors),
+      deckCell(d),
       formatPct(d.playRate),
       d.deltaPlayRate == null ? 'nouveau' : formatDelta(d.deltaPlayRate),
       formatPct(d.winRate),
@@ -262,7 +281,7 @@ function evolutionTableView(report) {
   return table(
     ['Deck', ...report.trend.weeks.map((w) => `${formatDay(w)} · popularité / win rate`)],
     report.decks.map((d) => [
-      chips(d.colors),
+      deckCell(d),
       ...d.history.map((p) => `${formatPct(p.playRate)} / ${formatPct(p.winRate)}`),
     ]),
   );
@@ -272,9 +291,9 @@ function matchupTableView(report) {
   const { decks, cells } = report.matchups;
   const byKey = new Map(cells.map((c) => [`${c.row}|${c.col}`, c]));
   return table(
-    ['Deck \\ contre', ...decks.map((d) => chips(d.colors))],
+    ['Deck \\ contre', ...decks.map((d) => deckCell(d))],
     decks.map((row) => [
-      chips(row.colors),
+      deckCell(row),
       ...decks.map((col) => {
         const cell = byKey.get(`${row.key}|${col.key}`);
         if (cell.mirror) return 'miroir';
@@ -293,7 +312,7 @@ function moversTableView(report) {
       .filter((d) => d.previous)
       .sort((a, b) => b.deltaPlayRate - a.deltaPlayRate)
       .map((d) => [
-        chips(d.colors),
+        deckCell(d),
         formatPct(d.previous.playRate),
         formatPct(d.playRate),
         formatDelta(d.deltaPlayRate) + flat(d.playRateChange),
@@ -306,11 +325,11 @@ function moversTableView(report) {
 
 function playDrawTableView(report) {
   return table(
-    ['Deck', 'En commençant', 'En second', 'Écart', capitalize(report.unit.many)],
+    ['Deck', 'En commençant', 'En second', 'Écart', capitalize(report.matchups.unit.many)],
     report.decks.map((d) => {
       const { onPlay, onDraw } = d.playDraw;
       return [
-        chips(d.colors),
+        deckCell(d),
         formatPct(onPlay.winRate),
         formatPct(onDraw.winRate),
         onPlay.winRate == null || onDraw.winRate == null
@@ -332,13 +351,13 @@ function deckSheetTableView(report, key) {
       'IC 95 %',
       'En commençant',
       'En second',
-      capitalize(report.unit.many),
+      capitalize(report.matchups.unit.many),
     ],
     report.decks.map((opponent) => {
       const cell = byKey.get(`${key}|${opponent.key}`);
       if (cell.mirror || cell.winRate == null) {
         return [
-          chips(opponent.colors),
+          deckCell(opponent),
           formatPct(opponent.playRate),
           cell.mirror ? 'miroir' : '—',
           '—',
@@ -349,7 +368,7 @@ function deckSheetTableView(report, key) {
       }
       const ci = wilson((cell.winRate * cell.games) / 100, cell.games);
       return [
-        chips(opponent.colors),
+        deckCell(opponent),
         formatPct(opponent.playRate),
         formatPct(cell.winRate),
         `${formatPct(ci[0])} – ${formatPct(ci[1])}`,
@@ -389,98 +408,165 @@ function emptyCard({ id, title, reason, controls }) {
   return figure;
 }
 
-/** The deck sheet card, with its deck picker; changing the deck redraws only this card. */
-function deckSheetCard(report, theme, opened, relevance) {
+/** The view a chart is shown in: by archetype when asked for and the week has archetypes. */
+const viewOf = (id) =>
+  state.archetypes.has(id) && lastReports.archetypes ? VIEWS.archetypes : VIEWS.colors;
+
+/**
+ * The inks / archetypes switch of a chart. Switching redraws only that card, and keeps the
+ * focus on the switch.
+ */
+function viewSwitch(id) {
+  const view = viewOf(id);
+  const { archetypes } = lastReports;
+  const group = el('div', { class: 'view-switch', role: 'group', 'aria-label': 'Vue' });
+  for (const [value, label] of [
+    [VIEWS.colors, 'Encres'],
+    [VIEWS.archetypes, 'Archétypes'],
+  ]) {
+    const button = el('button', { type: 'button', 'aria-pressed': String(view === value) }, label);
+    button.dataset.view = value;
+    if (value === VIEWS.archetypes && !archetypes) {
+      button.disabled = true;
+      button.title = 'Pas d’archétypes pour cette semaine';
+    } else if (value === VIEWS.archetypes && archetypes.coverage != null) {
+      // Share of decks recognised, kept short to fit on the title's line
+      const share = formatPct(100 * archetypes.coverage, 0);
+      button.append(el('span', { class: 'view-note' }, ` · ${share}`));
+      button.title = `${share} des decks rattachés à un archétype par duels.ink ; la popularité reste calculée sur tous les decks`;
+    }
+    button.addEventListener('click', () => {
+      if (value === viewOf(id)) return;
+      if (value === VIEWS.archetypes) state.archetypes.add(id);
+      else state.archetypes.delete(id);
+      writeUrlState();
+      const fresh = buildCard(id, openedTables());
+      $(id).replaceWith(fresh);
+      fresh.querySelector(`.view-switch [data-view="${value}"]`).focus();
+    });
+    group.append(button);
+  }
+  // Top right of the card, on the title's line; the deck sheet's picker goes on the left
+  const controls = el('div', { class: 'card-controls switch-only' });
+  controls.append(group);
+  return controls;
+}
+
+/** The deck sheet's deck picker; changing the deck redraws only this card. */
+function deckPicker(report) {
   const { decks } = report;
   const key = decks.some((d) => d.key === state.deck) ? state.deck : decks[0].key;
   const select = el('select', { 'aria-label': 'Deck de la fiche' });
-  // Options are text only: the inks as coloured-circle emoji
-  select.replaceChildren(...decks.map((d) => el('option', { value: d.key }, deckEmoji(d.colors))));
+  // Options are text only: the inks as coloured-circle emoji, then the archetype's name
+  select.replaceChildren(
+    ...decks.map((d) =>
+      el(
+        'option',
+        { value: d.key },
+        d.label ? `${deckEmoji(d.colors)} ${d.label}` : deckEmoji(d.colors),
+      ),
+    ),
+  );
   select.value = key;
   select.addEventListener('change', () => {
     state.deck = select.value === decks[0].key ? null : select.value;
     writeUrlState();
-    const fresh = deckSheetCard(report, theme, openedTables(), relevance);
+    const fresh = buildCard('fiche', openedTables());
     $('fiche').replaceWith(fresh);
     fresh.querySelector('select').focus();
   });
-  const controls = el('label', { class: 'card-control' });
-  controls.append(el('span', {}, 'Deck'), select);
-  // The picker stays: another deck may have enough games
-  const check = relevance.deckSheet(key);
-  if (!check.ok)
-    return emptyCard({ id: 'fiche', title: 'Fiche deck', reason: check.reason, controls });
-  return card(
-    {
-      id: 'fiche',
-      svg: deckSheetChart(report, key, { document, theme }),
-      table: deckSheetTableView(report, key),
-      controls,
-    },
-    opened,
-  );
+  const picker = el('label', { class: 'card-control' });
+  picker.append(el('span', {}, 'Deck'), select);
+  return { key, picker };
 }
 
-function renderCharts(report, relevance) {
+const CHARTS = [
+  {
+    id: 'meta',
+    title: 'Méta de la semaine',
+    check: (relevance) => relevance.meta,
+    svg: (report, theme) => metaTableChart(report, { document, theme }),
+    table: (report) => metaTableView(report),
+  },
+  {
+    // Same figures as the meta table, placed on a map: same table view.
+    id: 'carte',
+    title: 'Carte du méta',
+    check: (relevance) => relevance.map,
+    svg: (report, theme) => metaMapChart(report, { document, theme }),
+    table: (report) => metaTableView(report),
+  },
+  {
+    id: 'mouvements',
+    title: 'Mouvements de la semaine',
+    check: (relevance) => relevance.movers,
+    svg: (report, theme) => moversChart(report, { document, theme }),
+    table: (report) => moversTableView(report),
+  },
+  {
+    id: 'evolution',
+    title: 'Évolution',
+    check: (relevance) => relevance.evolution,
+    svg: (report, theme) => evolutionChart(report, { document, theme }),
+    table: (report) => evolutionTableView(report),
+  },
+  {
+    id: 'matchups',
+    title: 'Matchups',
+    check: (relevance) => relevance.matchups,
+    svg: (report, theme) => matchupsChart(report, { document, theme }),
+    table: (report) => matchupTableView(report),
+  },
+  {
+    // The deck sheet sits next to the matchup matrix.
+    id: 'fiche',
+    title: 'Fiche deck',
+    deckPicker: true,
+  },
+  {
+    id: 'premier',
+    title: 'Commencer ou jouer en second',
+    check: (relevance) => relevance.playDraw,
+    svg: (report, theme) => playDrawChart(report, { document, theme }),
+    table: (report) => playDrawTableView(report),
+  },
+];
+
+/** A chart's card in its current view; built only when there is enough data to show it. */
+function buildCard(id, opened) {
+  const chart = CHARTS.find((c) => c.id === id);
   const theme = darkQuery.matches ? themes.dark : themes.light;
-  const container = $('charts');
+  const view = viewOf(id);
+  const report = lastReports[view];
+  const relevance = lastReports.relevance[view];
+  const controls = viewSwitch(id);
+
+  if (chart.deckPicker) {
+    // The picker stays: another deck may have enough games
+    const { key, picker } = deckPicker(report);
+    controls.prepend(picker);
+    controls.classList.remove('switch-only');
+    const check = relevance.deckSheet(key);
+    if (!check.ok) return emptyCard({ id, title: chart.title, reason: check.reason, controls });
+    return card(
+      {
+        id,
+        svg: deckSheetChart(report, key, { document, theme }),
+        table: deckSheetTableView(report, key),
+        controls,
+      },
+      opened,
+    );
+  }
+
+  const check = chart.check(relevance);
+  if (!check.ok) return emptyCard({ id, title: chart.title, reason: check.reason, controls });
+  return card({ id, svg: chart.svg(report, theme), table: chart.table(report), controls }, opened);
+}
+
+function renderCharts() {
   const opened = openedTables();
-
-  // Built only when there is enough data to show them
-  const charts = [
-    {
-      id: 'meta',
-      title: 'Méta de la semaine',
-      check: relevance.meta,
-      svg: () => metaTableChart(report, { document, theme }),
-      table: () => metaTableView(report),
-    },
-    {
-      // Same figures as the meta table, placed on a map: same table view.
-      id: 'carte',
-      title: 'Carte du méta',
-      check: relevance.map,
-      svg: () => metaMapChart(report, { document, theme }),
-      table: () => metaTableView(report),
-    },
-    {
-      id: 'mouvements',
-      title: 'Mouvements de la semaine',
-      check: relevance.movers,
-      svg: () => moversChart(report, { document, theme }),
-      table: () => moversTableView(report),
-    },
-    {
-      id: 'evolution',
-      title: 'Évolution',
-      check: relevance.evolution,
-      svg: () => evolutionChart(report, { document, theme }),
-      table: () => evolutionTableView(report),
-    },
-    {
-      id: 'matchups',
-      title: 'Matchups',
-      check: relevance.matchups,
-      svg: () => matchupsChart(report, { document, theme }),
-      table: () => matchupTableView(report),
-    },
-    {
-      id: 'premier',
-      title: 'Commencer ou jouer en second',
-      check: relevance.playDraw,
-      svg: () => playDrawChart(report, { document, theme }),
-      table: () => playDrawTableView(report),
-    },
-  ];
-
-  const cards = charts.map(({ id, title, check, svg, table: tableView }) =>
-    check.ok
-      ? card({ id, svg: svg(), table: tableView() }, opened)
-      : emptyCard({ id, title, reason: check.reason }),
-  );
-  // The deck sheet sits next to the matchup matrix.
-  cards.splice(5, 0, deckSheetCard(report, theme, opened, relevance));
-  container.replaceChildren(...cards);
+  $('charts').replaceChildren(...CHARTS.map(({ id }) => buildCard(id, opened)));
 }
 
 function showError(error) {
@@ -492,7 +578,7 @@ function showError(error) {
 async function render() {
   const token = ++renderToken;
   // On reload, keep the previous render dimmed rather than an empty screen.
-  if (lastReport) $('charts').classList.add('loading');
+  if (lastReports) $('charts').classList.add('loading');
   try {
     const { index, snapshots } = await loadQueue(state.queue);
     if (token !== renderToken) return;
@@ -503,14 +589,29 @@ async function render() {
       weekStart: state.week ?? undefined,
       options: { matchupWeeks: state.matchupWeeks },
     });
-    lastReport = report;
+    // The same week by archetype, when it has some
+    const target = snapshots.find((snapshot) => snapshot.week.startDate === report.week.startDate);
+    const archetypes = hasArchetypes(target)
+      ? buildReport({
+          index,
+          snapshots,
+          weekStart: report.week.startDate,
+          options: { matchupWeeks: state.matchupWeeks },
+          view: VIEWS.archetypes,
+        })
+      : null;
     fillWeekSelect(index, snapshots, report.unit, report.week.startDate);
     const collected = index.weeks.length > 1 ? 'semaines collectées' : 'semaine collectée';
     $('subtitle').textContent =
       `${report.queueName} · ${index.weeks.length} ${collected} · données duels.ink du ${formatUpdatedAt(report.week.updatedAt)}`;
     const relevance = chartRelevance(report);
+    lastReports = {
+      colors: report,
+      archetypes,
+      relevance: { colors: relevance, archetypes: archetypes && chartRelevance(archetypes) },
+    };
     renderKpis(report, relevance);
-    renderCharts(report, relevance);
+    renderCharts();
   } catch (error) {
     showError(error);
   } finally {
@@ -564,7 +665,7 @@ document.addEventListener('focusout', () => {
 });
 
 darkQuery.addEventListener('change', () => {
-  if (lastReport) renderCharts(lastReport, chartRelevance(lastReport));
+  if (lastReports) renderCharts();
 });
 
 setupFilters().then(render, showError);

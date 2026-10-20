@@ -4,7 +4,7 @@
  */
 import { config as defaults } from '../config.js';
 import { UNITS } from './format.js';
-import { deckKey } from './inks.js';
+import { deckKey, nameArchetypes } from './inks.js';
 import { isWeekComplete } from './queues.js';
 
 const DAY_MS = 86_400_000;
@@ -46,26 +46,52 @@ export function winRateSignal(ci) {
   return 'neutral';
 }
 
-/** Sums the counters of several weekly snapshots. */
-export function aggregate(snapshots) {
+/**
+ * How decks are told apart: by their inks (colour pairs), or by archetype (several per colour
+ * pair, from the snapshots' `archetypes`; about three decks in four are recognised).
+ */
+export const VIEWS = { colors: 'colors', archetypes: 'archetypes' };
+
+/** True when a snapshot holds archetypes (weeks collected before them don't). */
+export const hasArchetypes = (snapshot) => Boolean(snapshot?.archetypes?.length);
+
+/**
+ * Sums the counters of several weekly snapshots. `seats` counts every deck played (each game
+ * has two), recognised as an archetype or not: play rates are shares of all decks in both views.
+ */
+export function aggregate(snapshots, view = VIEWS.colors) {
+  const byArchetype = view === VIEWS.archetypes;
   const decks = new Map();
   const matchups = new Map();
   let updatedAt = null;
+  let seats = 0;
 
   for (const snapshot of snapshots) {
     if (!updatedAt || snapshot.updatedAt > updatedAt) updatedAt = snapshot.updatedAt;
 
-    for (const pair of snapshot.colorPairs) {
-      const key = deckKey(pair.colors);
-      const deck = decks.get(key) ?? { key, colors: pair.colors, games: 0, wins: 0 };
-      deck.games += pair.games;
-      deck.wins += pair.wins;
-      decks.set(key, deck);
+    for (const pair of snapshot.colorPairs) seats += pair.games;
+
+    const entries = byArchetype
+      ? (snapshot.archetypes ?? []).map((a) => ({ ...a, key: a.id }))
+      : snapshot.colorPairs.map((pair) => ({ ...pair, key: deckKey(pair.colors) }));
+    for (const entry of entries) {
+      const deck = decks.get(entry.key) ?? {
+        key: entry.key,
+        colors: entry.colors,
+        games: 0,
+        wins: 0,
+      };
+      // Snapshots come oldest first: the latest name wins
+      if (byArchetype) Object.assign(deck, { archetype: entry.name, slug: entry.slug });
+      deck.games += entry.games;
+      deck.wins += entry.wins;
+      decks.set(entry.key, deck);
     }
 
-    for (const m of snapshot.matchups) {
-      const a = deckKey(m.colorsA);
-      const b = deckKey(m.colorsB);
+    const rows = byArchetype ? (snapshot.archetypeMatchups ?? []) : snapshot.matchups;
+    for (const m of rows) {
+      const a = byArchetype ? m.archetypeA : deckKey(m.colorsA);
+      const b = byArchetype ? m.archetypeB : deckKey(m.colorsB);
       const row = matchups.get(`${a}|${b}`) ?? {
         a,
         b,
@@ -83,7 +109,7 @@ export function aggregate(snapshots) {
     }
   }
 
-  return { updatedAt, decks, matchups };
+  return { updatedAt, seats, decks, matchups };
 }
 
 /** True for BO3 queues, where decks and matchups are counted in matches rather than games. */
@@ -106,9 +132,7 @@ export function sampleSize(snapshot, perMatch) {
  * Play rate is the share of decks played: each game counts two decks.
  */
 export function deckStats(agg) {
-  let seats = 0;
-  for (const deck of agg.decks.values()) seats += deck.games;
-
+  const { seats } = agg;
   return [...agg.decks.values()]
     .map((deck) => {
       const ci = wilson(deck.wins, deck.games);
@@ -260,10 +284,23 @@ function weekAxisPosition(weekStarts, isoDateTime) {
  * @param {string} [params.weekStart] target week (default: the latest collected)
  * @param {Partial<typeof defaults>} [params.options]
  * @param {Date} [params.today] to tell finished weeks from the one in progress
+ * @param {'colors' | 'archetypes'} [params.view] decks by inks or by archetype; by archetype,
+ *   only the weeks that hold archetypes are used
  */
-export function buildReport({ index, snapshots, weekStart, options = {}, today = new Date() }) {
+export function buildReport({
+  index,
+  snapshots: allSnapshots,
+  weekStart,
+  options = {},
+  today = new Date(),
+  view = VIEWS.colors,
+}) {
   const opts = { ...defaults, ...options };
+  const byArchetype = view === VIEWS.archetypes;
+  const snapshots = byArchetype ? allSnapshots.filter(hasArchetypes) : allSnapshots;
   const perMatch = countsMatches(index);
+  // duels.ink counts archetype matchups in games, even in BO3 queues
+  const matchupPerMatch = perMatch && !byArchetype;
   const size = (snapshot) => sampleSize(snapshot, perMatch);
   const sumSize = (list) => list.reduce((total, snapshot) => total + size(snapshot), 0);
   const byStart = new Map(snapshots.map((s) => [s.week.startDate, s]));
@@ -278,19 +315,21 @@ export function buildReport({ index, snapshots, weekStart, options = {}, today =
   const previous = before && size(before) >= opts.minWeekSample ? before : null;
 
   const statsByWeek = new Map();
+  const seatsByWeek = new Map();
   const statsOf = (start) => {
     if (!statsByWeek.has(start)) {
-      const stats = deckStats(aggregate([byStart.get(start)]));
-      statsByWeek.set(start, new Map(stats.map((d) => [d.key, d])));
+      const agg = aggregate([byStart.get(start)], view);
+      statsByWeek.set(start, new Map(deckStats(agg).map((d) => [d.key, d])));
+      seatsByWeek.set(start, agg.seats);
     }
     return statsByWeek.get(start);
   };
+  const seatsOf = (start) => (statsOf(start), seatsByWeek.get(start));
 
   const trendStarts = starts.slice(Math.max(0, targetIdx - opts.trendWeeks + 1), targetIdx + 1);
   const previousStats = previous ? statsOf(previous.week.startDate) : new Map();
-  const seatsOf = (stats) => [...stats.values()].reduce((total, d) => total + d.games, 0);
-  const seats = seatsOf(statsOf(target.week.startDate));
-  const previousSeats = seatsOf(previousStats);
+  const seats = seatsOf(target.week.startDate);
+  const previousSeats = previous ? seatsOf(previous.week.startDate) : 0;
 
   // The decks every chart shows: the most played ones (stats come sorted by play rate)
   const decks = [...statsOf(target.week.startDate).values()]
@@ -315,6 +354,7 @@ export function buildReport({ index, snapshots, weekStart, options = {}, today =
         }),
       };
     });
+  if (byArchetype) nameArchetypes(decks);
 
   // A queue kept to one set (index.era) only holds its games, release week included: no
   // earlier set to mark on the trend or to leave out of the matchups.
@@ -339,11 +379,11 @@ export function buildReport({ index, snapshots, weekStart, options = {}, today =
     .filter((start) => !eraStart || start >= eraStart);
   if (!matchupStarts.length) matchupStarts = [target.week.startDate];
   const matchupSnapshots = matchupStarts.map((start) => byStart.get(start));
-  const matchupAgg = aggregate(matchupSnapshots);
+  const matchupAgg = aggregate(matchupSnapshots, view);
   // This week alone against the window's earlier weeks: two independent samples.
-  const weekAgg = aggregate([target]);
+  const weekAgg = aggregate([target], view);
   const priorSnapshots = matchupSnapshots.filter((snapshot) => snapshot !== target);
-  const priorAgg = priorSnapshots.length ? aggregate(priorSnapshots) : null;
+  const priorAgg = priorSnapshots.length ? aggregate(priorSnapshots, view) : null;
   // Every pair of shown decks, for the matrix and the deck sheet
   const cells = decks.flatMap((row) =>
     decks.map((col) => {
@@ -378,11 +418,23 @@ export function buildReport({ index, snapshots, weekStart, options = {}, today =
     bestWinRate: [...decks].sort((a, b) => b.ci[0] - a.ci[0])[0] ?? null,
   };
 
+  // By archetype, only games between two recognised decks have a matchup
+  let matchupSize = sumSize(matchupSnapshots);
+  if (byArchetype) {
+    matchupSize = 0;
+    for (const row of matchupAgg.matchups.values()) matchupSize += row.games;
+  }
+  let recognised = 0;
+  for (const deck of statsOf(target.week.startDate).values()) recognised += deck.games;
+
   return {
     queue: index.queue,
     queueName: index.queueName ?? index.queue,
     gameMode: perMatch ? 'bo3' : 'bo1',
     unit: perMatch ? UNITS.match : UNITS.game,
+    view,
+    // Share of the week's decks recognised as an archetype (1 by inks)
+    coverage: seats ? recognised / seats : null,
     options: opts,
     era: era ? { key: era.key, name: era.name } : null,
     week: {
@@ -404,7 +456,11 @@ export function buildReport({ index, snapshots, weekStart, options = {}, today =
     matchups: {
       weeks: matchupStarts,
       endDate: target.week.endDate,
-      sampleSize: sumSize(matchupSnapshots),
+      // Unit of the matchup figures: games for archetypes, even in BO3
+      unit: matchupPerMatch ? UNITS.match : UNITS.game,
+      // false when duels.ink publishes no matchup at all (archetypes of a closed beta queue)
+      available: matchupAgg.matchups.size > 0,
+      sampleSize: matchupSize,
       firstPlayerWinRate: firstPlayerWinRate(matchupAgg),
       updatedAt: matchupAgg.updatedAt,
       decks,

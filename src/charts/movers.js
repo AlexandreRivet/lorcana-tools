@@ -6,18 +6,20 @@
  */
 import { max, scaleLinear } from 'd3';
 import { formatDay, formatDelta, formatPct } from '../lib/format.js';
-import { deckName } from '../lib/inks.js';
+import { deckTitle } from '../lib/inks.js';
 import {
   PAD,
   barPath,
   createSvg,
   deckLabel,
+  deckLabelWidth,
   finalize,
   footer,
   header,
   hitArea,
   legendDot,
   middle,
+  nameRoom,
   textWidth,
 } from './common.js';
 
@@ -63,17 +65,19 @@ export function moversChart(report, { document, theme, width = 800 }) {
   }
 
   const signalColor = { up: theme.positive, flat: theme.neutral, down: theme.negative };
+  // Archetype names widen the deck column; both panels give up the room
+  const room = nameRoom(report.decks);
   const panels = [
     {
       label: 'POPULARITÉ (Δ PTS)',
-      from: 70,
-      to: 400,
+      from: 70 + room,
+      to: 400 + room / 2,
       value: (d) => d.deltaPlayRate,
       change: (d) => d.playRateChange,
     },
     {
       label: 'WIN RATE (Δ PTS)',
-      from: 446,
+      from: 446 + room / 2,
       to: width - PAD,
       value: (d) => d.deltaWinRate,
       change: (d) => d.winRateChange,
@@ -171,7 +175,7 @@ export function moversChart(report, { document, theme, width = 800 }) {
       width: width - 2 * PAD,
       height: ROW_HEIGHT,
       tip: [
-        deckName(deck.colors),
+        deckTitle(deck),
         `Popularité ${formatDelta(deck.deltaPlayRate)} pts · win rate ${formatDelta(
           deck.deltaWinRate,
         )} pts`,
@@ -208,8 +212,18 @@ export function moversChart(report, { document, theme, width = 800 }) {
       .attr('font-size', 12)
       .attr('fill', theme.text2)
       .text(lead);
-    let nx = PAD + textWidth(lead, 12) + 10;
-    for (const deck of newcomers) nx += deckLabel(svg, deck, { x: nx, y: ny, theme }) + 10;
+    const start = PAD + textWidth(lead, 12) + 10;
+    let nx = start;
+    let line = ny;
+    for (const deck of newcomers) {
+      // Archetype names can run past the edge: wrap
+      if (nx > start && nx + deckLabelWidth(deck) > width - PAD) {
+        nx = start;
+        line += 22;
+        footerTop += 22;
+      }
+      nx += deckLabel(svg, deck, { x: nx, y: line, theme }) + 14;
+    }
     footerTop += 24;
   }
   const height = footer(svg, {

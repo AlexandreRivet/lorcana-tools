@@ -6,7 +6,7 @@
  */
 import { max, min, scaleLinear } from 'd3';
 import { formatCount, formatDelta, formatInt, formatPct, formatWeek } from '../lib/format.js';
-import { deckName } from '../lib/inks.js';
+import { deckTitle } from '../lib/inks.js';
 import {
   PAD,
   createSvg,
@@ -18,6 +18,7 @@ import {
   horizontalBar,
   legendDot,
   middle,
+  nameRoom,
 } from './common.js';
 
 const ROW_HEIGHT = 30;
@@ -60,12 +61,16 @@ export function metaTableChart(report, { document, theme, width = 800 }) {
     theme,
   });
 
+  // Archetype names widen the deck column; the bars and the win-rate scale give up the room
+  const room = nameRoom(decks);
+  const bar = 66 + room;
+  const barMax = 190 - Math.round(room * 0.6);
   const col = {
     deck: PAD,
-    bar: 66,
-    barMax: 190,
-    deltaPlay: 346,
-    dotsFrom: 374,
+    bar,
+    barMax,
+    deltaPlay: bar + barMax + 90,
+    dotsFrom: bar + barMax + 118,
     dotsTo: 590,
     winRate: 664,
     deltaWin: 722,
@@ -254,7 +259,7 @@ export function metaTableChart(report, { document, theme, width = 800 }) {
       width: width - 2 * PAD,
       height: ROW_HEIGHT,
       tip: [
-        deckName(deck.colors),
+        deckTitle(deck),
         `${formatPct(deck.winRate)} de victoires`,
         `IC 95 % : ${formatPct(deck.ci[0])} – ${formatPct(deck.ci[1])}`,
         `${formatPct(deck.playRate)} des decks · ${formatCount(deck.games, unit)}`,

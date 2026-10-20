@@ -5,22 +5,26 @@
  */
 import { interpolateLab, piecewise, rgb, scaleDiverging } from 'd3';
 import { formatCount, formatDay, formatPct, formatWeekRange } from '../lib/format.js';
-import { deckName } from '../lib/inks.js';
+import { deckTitle } from '../lib/inks.js';
 import {
   DECK_LABEL_WIDTH,
   PAD,
   createSvg,
   deckLabel,
   finalize,
+  fitText,
   footer,
   header,
   middle,
+  nameRoom,
   textWidth,
 } from './common.js';
 
 const LABEL_WIDTH = 40;
 const CELL_HEIGHT = 40;
 const COLUMN_HEADER = 30;
+/** Height of the archetype names written upwards above the columns. */
+const COLUMN_NAME_HEIGHT = 112;
 
 /** Largest distance from 50% shown by the colour (beyond it, the colour saturates). */
 export const MATCHUP_SPREAD = 10;
@@ -52,7 +56,8 @@ export function matchupColorScale(theme) {
 
 export function matchupsChart(report, { document, theme, width = 800 }) {
   const { decks, cells, weeks, sampleSize, updatedAt, endDate } = report.matchups;
-  const { unit } = report;
+  // Matchup figures: games by archetype, even in BO3
+  const unit = report.matchups.unit ?? report.unit;
   const minGames = report.options.minMatchupGames;
   const title = `Matchups — ${weeks.length > 1 ? `${weeks.length} dernières semaines` : 'semaine'}`;
   const svg = createSvg(document, { width, title, theme });
@@ -64,22 +69,41 @@ export function matchupsChart(report, { document, theme, width = 800 }) {
   });
 
   const color = matchupColorScale(theme);
-  const gridLeft = PAD + LABEL_WIDTH;
+  // By archetype: names after the row chips, and written upwards above the column chips
+  const room = nameRoom(decks);
+  const gridLeft = PAD + LABEL_WIDTH + room;
   const cellWidth = Math.floor((width - PAD - gridLeft) / decks.length);
-  const gridTop = top + COLUMN_HEADER;
+  const columnHeader = COLUMN_HEADER + (room ? COLUMN_NAME_HEIGHT : 0);
+  const gridTop = top + columnHeader;
 
-  // Column headers: the opponent's ink chips
+  // Column headers: the opponent's ink chips, with its name above when it has one
   decks.forEach((deck, j) => {
     const cx = gridLeft + j * cellWidth + cellWidth / 2;
-    deckLabel(svg, deck, { x: cx - DECK_LABEL_WIDTH / 2, y: top + 10, theme });
+    const chipsY = top + columnHeader - 20;
+    deckLabel(svg, { ...deck, label: null }, { x: cx - DECK_LABEL_WIDTH / 2, y: chipsY, theme });
+    if (deck.label) {
+      svg
+        .append('text')
+        .attr('transform', `translate(${cx + middle(11)},${chipsY - 12}) rotate(-90)`)
+        .attr('font-size', 11)
+        .attr('fill', theme.text)
+        .text(fitText(deck.label, COLUMN_NAME_HEIGHT - 4, 11))
+        .append('title')
+        .text(deckTitle(deck));
+    }
   });
 
   const byKey = new Map(cells.map((c) => [`${c.row}|${c.col}`, c]));
-  const nameOf = new Map(decks.map((d) => [d.key, deckName(d.colors)]));
+  const nameOf = new Map(decks.map((d) => [d.key, deckTitle(d)]));
 
   decks.forEach((rowDeck, i) => {
     const rowTop = gridTop + i * CELL_HEIGHT;
-    deckLabel(svg, rowDeck, { x: PAD, y: rowTop + CELL_HEIGHT / 2, theme });
+    deckLabel(svg, rowDeck, {
+      x: PAD,
+      y: rowTop + CELL_HEIGHT / 2,
+      theme,
+      maxWidth: LABEL_WIDTH + room - DECK_LABEL_WIDTH - 6,
+    });
 
     decks.forEach((colDeck, j) => {
       const cell = byKey.get(`${rowDeck.key}|${colDeck.key}`);
