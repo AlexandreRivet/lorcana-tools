@@ -331,29 +331,36 @@ export function buildReport({
   const seats = seatsOf(target.week.startDate);
   const previousSeats = previous ? seatsOf(previous.week.startDate) : 0;
 
-  // The decks every chart shows: the most played ones (stats come sorted by play rate)
+  const withChanges = (deck) => {
+    const prev = previousStats.get(deck.key);
+    return {
+      ...deck,
+      deltaPlayRate: prev ? deck.playRate - prev.playRate : null,
+      ...weekOverWeek(deck, prev, seats, previousSeats),
+    };
+  };
+  // The decks the charts show, most played first (stats come sorted by play rate)
   const decks = [...statsOf(target.week.startDate).values()]
+    .filter((deck) => deck.playRate >= Math.min(opts.minPlayRate, opts.deckMinPlayRate))
+    .slice(0, Math.max(opts.topDecks, opts.maxDecks))
+    .map((deck) => ({
+      ...withChanges(deck),
+      history: trendStarts.map((start) => {
+        const s = statsOf(start).get(deck.key);
+        return {
+          startDate: start,
+          // Missing that week: nobody played it (or too few games to be published).
+          playRate: s?.playRate ?? 0,
+          winRate: s?.winRate ?? null,
+          ci: s?.ci ?? null,
+          games: s?.games ?? 0,
+        };
+      }),
+    }));
+  // The most played of them: the meta map, the key figures and the podcast
+  const topDecks = decks
     .filter((deck) => deck.playRate >= opts.minPlayRate)
-    .slice(0, opts.topDecks)
-    .map((deck) => {
-      const prev = previousStats.get(deck.key);
-      return {
-        ...deck,
-        deltaPlayRate: prev ? deck.playRate - prev.playRate : null,
-        ...weekOverWeek(deck, prev, seats, previousSeats),
-        history: trendStarts.map((start) => {
-          const s = statsOf(start).get(deck.key);
-          return {
-            startDate: start,
-            // Missing that week: nobody played it (or too few games to be published).
-            playRate: s?.playRate ?? 0,
-            winRate: s?.winRate ?? null,
-            ci: s?.ci ?? null,
-            games: s?.games ?? 0,
-          };
-        }),
-      };
-    });
+    .slice(0, opts.topDecks);
   if (byArchetype) nameArchetypes(decks);
 
   // A queue kept to one set (index.era) only holds its games, release week included: no
@@ -384,28 +391,31 @@ export function buildReport({
   const weekAgg = aggregate([target], view);
   const priorSnapshots = matchupSnapshots.filter((snapshot) => snapshot !== target);
   const priorAgg = priorSnapshots.length ? aggregate(priorSnapshots, view) : null;
+  const cellsOf = (list) =>
+    list.flatMap((row) =>
+      list.map((col) => {
+        const m = matchupFor(matchupAgg, row.key, col.key);
+        return {
+          row: row.key,
+          col: col.key,
+          mirror: row.key === col.key,
+          games: m?.games ?? 0,
+          winRate: m ? rate(m) : null,
+          onPlay: m ? { games: m.onPlay.games, winRate: rate(m.onPlay) } : null,
+          onDraw: m ? { games: m.onDraw.games, winRate: rate(m.onDraw) } : null,
+          ...matchupTrend(weekAgg, priorAgg, row.key, col.key, opts.minMatchupGames),
+        };
+      }),
+    );
   // Every pair of shown decks, for the matrix and the deck sheet
-  const cells = decks.flatMap((row) =>
-    decks.map((col) => {
-      const m = matchupFor(matchupAgg, row.key, col.key);
-      return {
-        row: row.key,
-        col: col.key,
-        mirror: row.key === col.key,
-        games: m?.games ?? 0,
-        winRate: m ? rate(m) : null,
-        onPlay: m ? { games: m.onPlay.games, winRate: rate(m.onPlay) } : null,
-        onDraw: m ? { games: m.onDraw.games, winRate: rate(m.onDraw) } : null,
-        ...matchupTrend(weekAgg, priorAgg, row.key, col.key, opts.minMatchupGames),
-      };
-    }),
-  );
+  const cells = cellsOf(decks);
 
   for (const deck of decks) deck.playDraw = playDrawFor(matchupAgg, deck.key);
 
-  const withPrev = decks.filter((d) => d.deltaPlayRate != null);
+  // Key figures among the top decks: a rarely played deck's lucky week isn't the headline
+  const withPrev = topDecks.filter((d) => d.deltaPlayRate != null);
   const summary = {
-    topDeck: decks[0] ?? null,
+    topDeck: topDecks[0] ?? null,
     risers: withPrev
       .filter((d) => d.deltaPlayRate >= opts.moverThreshold)
       .sort((a, b) => b.deltaPlayRate - a.deltaPlayRate)
@@ -415,7 +425,7 @@ export function buildReport({
       .sort((a, b) => a.deltaPlayRate - b.deltaPlayRate)
       .slice(0, 3),
     // Conservative ranking on the interval's lower bound, so a small lucky sample doesn't win.
-    bestWinRate: [...decks].sort((a, b) => b.ci[0] - a.ci[0])[0] ?? null,
+    bestWinRate: [...topDecks].sort((a, b) => b.ci[0] - a.ci[0])[0] ?? null,
   };
 
   // By archetype, only games between two recognised decks have a matchup
@@ -446,6 +456,8 @@ export function buildReport({
     },
     previousWeek: previous ? { ...previous.week, sampleSize: size(previous) } : null,
     decks,
+    // The most played ones, a subset of decks: the meta map, the key figures, the podcast
+    topDecks,
     trend: {
       weeks: trendStarts,
       endDate: target.week.endDate,

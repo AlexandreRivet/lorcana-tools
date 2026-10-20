@@ -20,13 +20,19 @@ export const config = {
   ],
 
   /**
-   * Decks shown everywhere — every chart, table, the deck picker and the Discord summary: the
-   * most played ones that week. Applied once, when the report is built.
+   * Decks of the meta map, the key figures (page and Discord summary) and the podcast: the most
+   * played ones that week, above minPlayRate (%). The map gets unreadable with more.
    */
   topDecks: 12,
-
-  /** Floor under the top decks: a deck below this play rate (%) is never shown. */
   minPlayRate: 1,
+
+  /**
+   * Decks of every other chart, their tables and the deck picker: every deck above this play
+   * rate (%), up to maxDecks, the top decks first. Their figures come with their interval, so
+   * the less played ones stay readable. Applied once, when the report is built.
+   */
+  deckMinPlayRate: 0.5,
+  maxDecks: 24,
 
   /**
    * Minimum games (BO3: matches) in a week for its charts to be shown, and for it to be

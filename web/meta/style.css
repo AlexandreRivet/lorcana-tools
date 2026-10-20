@@ -104,6 +104,11 @@
   margin-bottom: 20px;
 }
 
+/* The archetypes row sits close under the inks row: one block of key figures */
+.kpis:has(+ .kpis:not([hidden])) {
+  margin-bottom: 12px;
+}
+
 .kpi {
   background: var(--surface);
   border: 1px solid var(--border);
@@ -123,6 +128,13 @@
   margin-top: 4px;
   font-size: 18px;
   font-weight: 600;
+}
+
+.kpi-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .kpi-delta {

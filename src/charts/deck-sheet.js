@@ -32,7 +32,8 @@ export const MATCHUP_SIGNAL_LABELS = {
 };
 
 export function deckSheetChart(report, deckKey, { document, theme, width = 800 }) {
-  const deck = report.decks.find((d) => d.key === deckKey) ?? report.decks[0];
+  const { decks } = report;
+  const deck = decks.find((d) => d.key === deckKey) ?? decks[0];
   const { cells, weeks, endDate, sampleSize, updatedAt } = report.matchups;
   // Matchup figures: games by archetype, even in BO3
   const unit = report.matchups.unit ?? report.unit;
@@ -79,7 +80,7 @@ export function deckSheetChart(report, deckKey, { document, theme, width = 800 }
   }
 
   const byKey = new Map(cells.map((c) => [`${c.row}|${c.col}`, c]));
-  const rows = report.decks.map((opponent) => {
+  const rows = decks.map((opponent) => {
     const cell = byKey.get(`${deck.key}|${opponent.key}`);
     const enough = !cell.mirror && cell.winRate != null && cell.games >= minGames;
     const ci = enough ? wilson((cell.winRate * cell.games) / 100, cell.games) : null;
@@ -87,7 +88,7 @@ export function deckSheetChart(report, deckKey, { document, theme, width = 800 }
     return { opponent, cell, enough, ci, signal };
   });
 
-  const room = nameRoom(report.decks);
+  const room = nameRoom(decks);
   const col = {
     deck: PAD,
     freq: 110 + room,

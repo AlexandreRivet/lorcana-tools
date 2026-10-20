@@ -36,15 +36,14 @@ export function moversChart(report, { document, theme, width = 800 }) {
     subtitle: previousWeek
       ? `${report.queueName} · semaine du ${formatDay(week.startDate)}${week.complete === false ? ' (en cours)' : ''} vs semaine du ${formatDay(
           previousWeek.startDate,
-        )}`
+        )} · decks à plus de ${formatPct(report.options.deckMinPlayRate)} de popularité`
       : report.queueName,
     theme,
   });
 
-  const rows = report.decks
-    .filter((d) => d.previous)
-    .sort((a, b) => b.deltaPlayRate - a.deltaPlayRate);
-  const newcomers = report.decks.filter((d) => !d.previous);
+  const shown = report.decks;
+  const rows = shown.filter((d) => d.previous).sort((a, b) => b.deltaPlayRate - a.deltaPlayRate);
+  const newcomers = shown.filter((d) => !d.previous);
 
   if (!rows.length) {
     svg
@@ -66,7 +65,7 @@ export function moversChart(report, { document, theme, width = 800 }) {
 
   const signalColor = { up: theme.positive, flat: theme.neutral, down: theme.negative };
   // Archetype names widen the deck column; both panels give up the room
-  const room = nameRoom(report.decks);
+  const room = nameRoom(shown);
   const panels = [
     {
       label: 'POPULARITÉ (Δ PTS)',

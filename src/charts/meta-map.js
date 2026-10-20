@@ -29,7 +29,8 @@ const CHIP_R = 6;
 const chipsWidth = (colors) => CHIP_R * 2 + (colors.length - 1) * (CHIP_R * 2 - 1);
 
 export function metaMapChart(report, { document, theme, width = 800 }) {
-  const { decks, week, unit } = report;
+  // The most played decks only: more would crowd the map
+  const { topDecks: decks = report.decks, week, unit } = report;
   const title = 'Carte du méta';
   const svg = createSvg(document, { width, title, theme });
 

@@ -185,34 +185,53 @@ function deckCell(deck) {
   return wrapper;
 }
 
+/** A key figure: text, or a deck as its chips (and its archetype's name when it has one). */
 function kpi(label, value, detail) {
   const tile = el('div', { class: 'kpi' });
   const valueNode = el('div', { class: 'kpi-value' });
   if (typeof value === 'string') valueNode.textContent = value;
-  else valueNode.append(chips(value.colors));
+  else {
+    valueNode.append(chips(value.colors));
+    if (value.label) valueNode.append(el('span', { class: 'kpi-name' }, value.label));
+  }
   tile.append(el('div', { class: 'kpi-label' }, label), valueNode);
   if (detail) tile.append(el('div', { class: 'kpi-delta' }, detail));
   return tile;
 }
 
-function renderKpis(report, relevance) {
+/**
+ * The key figures of a report, into `container`. By archetype, the first tile is the share of
+ * decks recognised instead of the volume, which the inks row already gives.
+ */
+function renderKpis(container, report, relevance) {
   const { week, previousWeek, summary, unit } = report;
   const { topDeck, risers, bestWinRate } = summary;
+  const byArchetype = report.view === VIEWS.archetypes;
+  const noun = byArchetype ? 'Archétype' : 'Deck';
   // A week in progress keeps growing: its volume isn't comparable with a full week yet
   let volumeChange = null;
   if (!week.complete) volumeChange = 'Semaine en cours · mise à jour chaque matin';
   else if (previousWeek?.sampleSize) {
     volumeChange = `${formatDelta((100 * (week.sampleSize - previousWeek.sampleSize)) / previousWeek.sampleSize)} % vs semaine précédente`;
   }
+  const first = byArchetype
+    ? kpi(
+        'Decks reconnus',
+        formatPct(100 * report.coverage, 0),
+        'rattachés à un archétype par duels.ink',
+      )
+    : kpi(unit.played, formatInt(week.sampleSize), volumeChange);
 
-  // Too little data: only the volume, with the reason; the other figures would mean nothing
+  // Too little data: only the first tile, with the reason; the other figures would mean nothing
   if (!relevance.week.ok) {
-    $('kpis').replaceChildren(kpi(unit.played, formatInt(week.sampleSize), relevance.week.reason));
+    container.replaceChildren(
+      byArchetype ? first : kpi(unit.played, formatInt(week.sampleSize), relevance.week.reason),
+    );
     return;
   }
-  const tiles = [kpi(unit.played, formatInt(week.sampleSize), volumeChange)];
+  const tiles = [first];
   if (topDeck) {
-    tiles.push(kpi('Deck le plus joué', topDeck, `${formatPct(topDeck.playRate)} des decks`));
+    tiles.push(kpi(`${noun} le plus joué`, topDeck, `${formatPct(topDeck.playRate)} des decks`));
   }
   tiles.push(
     risers[0]
@@ -224,7 +243,9 @@ function renderKpis(report, relevance) {
       : kpi(
           'Plus forte hausse',
           '—',
-          previousWeek ? 'Aucun deck ne bouge de plus de 0,5 pt' : 'Pas de semaine précédente',
+          previousWeek
+            ? `Aucun ${noun.toLowerCase()} ne bouge de plus de 0,5 pt`
+            : 'Pas de semaine précédente',
         ),
   );
   if (bestWinRate) {
@@ -236,7 +257,7 @@ function renderKpis(report, relevance) {
       ),
     );
   }
-  $('kpis').replaceChildren(...tiles);
+  container.replaceChildren(...tiles);
 }
 
 // --- Table views: every chart has an equivalent readable without colour or hover ---
@@ -263,10 +284,10 @@ function table(headers, rows) {
   return node;
 }
 
-function metaTableView(report) {
+function metaTableView(report, decks = report.decks) {
   return table(
     ['Deck', 'Popularité', 'Δ pts vs S−1', 'Win rate', 'IC 95 %', capitalize(report.unit.many)],
-    report.decks.map((d) => [
+    decks.map((d) => [
       deckCell(d),
       formatPct(d.playRate),
       d.deltaPlayRate == null ? 'nouveau' : formatDelta(d.deltaPlayRate),
@@ -494,7 +515,7 @@ const CHARTS = [
     title: 'Carte du méta',
     check: (relevance) => relevance.map,
     svg: (report, theme) => metaMapChart(report, { document, theme }),
-    table: (report) => metaTableView(report),
+    table: (report) => metaTableView(report, report.topDecks),
   },
   {
     id: 'mouvements',
@@ -610,7 +631,12 @@ async function render() {
       archetypes,
       relevance: { colors: relevance, archetypes: archetypes && chartRelevance(archetypes) },
     };
-    renderKpis(report, relevance);
+    renderKpis($('kpis'), report, relevance);
+    // The same figures by archetype, when the week has some
+    $('kpis-archetypes').hidden = !archetypes;
+    if (archetypes) {
+      renderKpis($('kpis-archetypes'), archetypes, lastReports.relevance.archetypes);
+    }
     renderCharts();
   } catch (error) {
     showError(error);

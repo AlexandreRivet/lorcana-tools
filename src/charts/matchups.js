@@ -22,6 +22,8 @@ import {
 
 const LABEL_WIDTH = 40;
 const CELL_HEIGHT = 40;
+/** Narrower cells than this (many decks) get shorter rows, smaller figures and a short mirror mark. */
+const COMPACT_CELL = 44;
 const COLUMN_HEADER = 30;
 /** Height of the archetype names written upwards above the columns. */
 const COLUMN_NAME_HEIGHT = 112;
@@ -73,6 +75,8 @@ export function matchupsChart(report, { document, theme, width = 800 }) {
   const room = nameRoom(decks);
   const gridLeft = PAD + LABEL_WIDTH + room;
   const cellWidth = Math.floor((width - PAD - gridLeft) / decks.length);
+  const compact = cellWidth < COMPACT_CELL;
+  const cellHeight = compact ? 30 : CELL_HEIGHT;
   const columnHeader = COLUMN_HEADER + (room ? COLUMN_NAME_HEIGHT : 0);
   const gridTop = top + columnHeader;
 
@@ -97,10 +101,10 @@ export function matchupsChart(report, { document, theme, width = 800 }) {
   const nameOf = new Map(decks.map((d) => [d.key, deckTitle(d)]));
 
   decks.forEach((rowDeck, i) => {
-    const rowTop = gridTop + i * CELL_HEIGHT;
+    const rowTop = gridTop + i * cellHeight;
     deckLabel(svg, rowDeck, {
       x: PAD,
-      y: rowTop + CELL_HEIGHT / 2,
+      y: rowTop + cellHeight / 2,
       theme,
       maxWidth: LABEL_WIDTH + room - DECK_LABEL_WIDTH - 6,
     });
@@ -145,17 +149,18 @@ export function matchupsChart(report, { document, theme, width = 800 }) {
         .attr('x', x + 1)
         .attr('y', rowTop + 1)
         .attr('width', cellWidth - 2)
-        .attr('height', CELL_HEIGHT - 2)
+        .attr('height', cellHeight - 2)
         .attr('rx', 2)
         .attr('fill', fill)
         .attr('tabindex', 0)
         .attr('data-tip', tip.join('\n'));
 
-      const label = cell.mirror ? 'miroir' : enough ? String(Math.round(cell.winRate)) : '—';
-      const size = cell.mirror ? 10 : 13;
+      const mirrorMark = compact ? '=' : 'miroir';
+      const label = cell.mirror ? mirrorMark : enough ? String(Math.round(cell.winRate)) : '—';
+      const size = cell.mirror && !compact ? 10 : compact ? 11 : 13;
       g.append('text')
         .attr('x', x + cellWidth / 2)
-        .attr('y', rowTop + CELL_HEIGHT / 2 + middle(size))
+        .attr('y', rowTop + cellHeight / 2 + middle(size))
         .attr('font-size', size)
         .attr('font-weight', enough && !cell.mirror ? 500 : 400)
         .attr('fill', enough && !cell.mirror ? inkOn(fill) : theme.muted)
@@ -165,8 +170,8 @@ export function matchupsChart(report, { document, theme, width = 800 }) {
 
       // ▲ / ▼ in the corner: this week clearly above / below the window's earlier weeks
       if (cell.trend) {
-        const cx = x + cellWidth - 9;
-        const cy = rowTop + 9;
+        const cx = x + cellWidth - (compact ? 6 : 9);
+        const cy = rowTop + (compact ? 7 : 9);
         const d = cell.trend === 'up' ? -1 : 1;
         g.append('path')
           .attr('d', `M${cx - 4},${cy - 2.5 * d}L${cx + 4},${cy - 2.5 * d}L${cx},${cy + 3.5 * d}Z`)
@@ -177,7 +182,7 @@ export function matchupsChart(report, { document, theme, width = 800 }) {
   });
 
   // Legend: diverging gradient + what the neutral cells mean
-  const legendTop = gridTop + decks.length * CELL_HEIGHT + 26;
+  const legendTop = gridTop + decks.length * cellHeight + 26;
   const gradientId = `matchup-gradient-${theme.name}`;
   const gradient = svg
     .append('defs')
@@ -231,7 +236,7 @@ export function matchupsChart(report, { document, theme, width = 800 }) {
     .attr('y', legendTop + 5 + middle(11))
     .attr('font-size', 11)
     .attr('fill', theme.text2)
-    .text(`— : moins de ${minGames} ${unit.many}`);
+    .text(`— : moins de ${minGames} ${unit.many}${compact ? ' · = : miroir' : ''}`);
 
   // Key for the ▲ / ▼ flags, only on weeks that have some
   let footerTop = legendTop + 50;

@@ -31,6 +31,9 @@ export function chartRelevance(report) {
   const gate = (check) => (weekOk.ok ? check() : weekOk);
 
   const matchupUnit = report.matchups.unit ?? unit;
+  // Matchups are judged against the top decks: the rarely played ones are often thin
+  const top = new Set((report.topDecks ?? report.decks).map((d) => d.key));
+  const topCells = report.matchups.cells.filter((c) => top.has(c.col));
   const noMatchups = no('duels.ink ne publie pas de matchups par archétype pour cette queue');
   const matchupGate = (cells) => () => {
     if (report.matchups.available === false) return noMatchups;
@@ -56,7 +59,7 @@ export function chartRelevance(report) {
         ? OK
         : no('Pas encore deux semaines assez fournies pour montrer une évolution'),
     ),
-    matchups: gate(matchupGate(report.matchups.cells)),
+    matchups: gate(matchupGate(topCells.filter((c) => top.has(c.row)))),
     playDraw:
       report.matchups.available === false
         ? noMatchups
@@ -65,6 +68,6 @@ export function chartRelevance(report) {
           : no(
               `Pas assez de données : ${formatCount(report.matchups.sampleSize, matchupUnit)} sur la période (minimum ${formatInt(min)})`,
             ),
-    deckSheet: (key) => gate(matchupGate(report.matchups.cells.filter((c) => c.row === key))),
+    deckSheet: (key) => gate(matchupGate(topCells.filter((c) => c.row === key))),
   };
 }

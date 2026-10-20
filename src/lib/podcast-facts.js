@@ -51,8 +51,9 @@ function deckFacts(deck, rank) {
 function matchupFacts(report, relevance) {
   if (!relevance.matchups.ok) return { reliable: false, reason: relevance.matchups.reason };
   const { cells, weeks } = report.matchups;
-  const top = new Set(report.decks.slice(0, MATCHUP_DECKS).map((d) => d.key));
-  const named = new Map(report.decks.map((d) => [d.key, deckColorName(d.colors)]));
+  const decks = report.topDecks ?? report.decks;
+  const top = new Set(decks.slice(0, MATCHUP_DECKS).map((d) => d.key));
+  const named = new Map(decks.map((d) => [d.key, deckColorName(d.colors)]));
   const solid = cells.filter(
     (c) =>
       !c.mirror &&
@@ -89,7 +90,9 @@ function matchupFacts(report, relevance) {
  * @param {object} relevance from chartRelevance(report)
  */
 export function buildPodcastFacts(report, relevance) {
-  const { week, previousWeek, unit, summary, decks } = report;
+  // The most played decks only, as before the charts listed more
+  const { week, previousWeek, unit, summary } = report;
+  const decks = report.topDecks ?? report.decks;
   const name = (deck) => (deck ? deckColorName(deck.colors) : null);
   const volumeChange = previousWeek?.sampleSize
     ? round1((100 * (week.sampleSize - previousWeek.sampleSize)) / previousWeek.sampleSize)
