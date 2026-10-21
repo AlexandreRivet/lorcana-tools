@@ -153,8 +153,12 @@ for (const format of FORMATS) {
     options: { trendWeeks: config.digestTrendWeeks },
   });
   const digest = await renderDigest(report, trendReport, dir);
-  // The podcast script's input (npm run podcast:script): its hosts name decks by inks
-  const facts = buildPodcastFacts(inks, chartRelevance(inks));
+  // The podcast script's input (npm run podcast:script): the colour pairs, then the archetypes
+  const facts = buildPodcastFacts(
+    inks,
+    chartRelevance(inks),
+    view === VIEWS.archetypes ? byArchetype : null,
+  );
   await writeFile(path.join(dir, 'facts.json'), `${JSON.stringify(facts, null, 2)}\n`);
   const { title, description } = digest.card;
   const files = digest.images.map((image) => image.file).join(', ') || 'no image';

@@ -1,17 +1,20 @@
 /**
- * The week's figures for the podcast script, taken from a report: rounded, labelled in French
- * (decks by their plain colours, « jaune-vert », as the hosts say them) and already qualified (a change within the noise says so), so the model only tells them and
- * never computes or reads intervals itself. Pure functions.
+ * The week's figures for the podcast script, taken from the reports: rounded, labelled in French
+ * (decks by their plain colours, « jaune-vert », as the hosts say them) and already qualified (a
+ * change within the noise says so), so the model only tells them and never computes or reads
+ * intervals itself. Two parts per format: the colour pairs, kept short, then the top archetypes,
+ * in detail, each with its colours. Pure functions.
  */
 import { formatWeekRange } from './format.js';
 import { deckColorName } from './inks.js';
+import { chartRelevance } from './relevance.js';
 
-/** Weeks of play-rate history given per deck. */
+/** Weeks of play-rate history given per archetype. */
 const HISTORY_WEEKS = 6;
-/** Most lopsided matchups listed. */
-const MATCHUPS = 6;
-/** Matchups are only picked among this many top decks: the ones listeners face. */
-const MATCHUP_DECKS = 8;
+/** Colour pairs listed, with a few figures each. */
+const INK_DECKS = 8;
+/** Archetypes told in detail: the ones that shape the meta. */
+const TOP_ARCHETYPES = 5;
 
 const round1 = (v) => (v == null || Number.isNaN(v) ? null : Math.round(v * 10) / 10);
 
@@ -22,17 +25,42 @@ const VS_50 = {
   neutral: 'pas distinguable de 50 %',
 };
 
-function deckFacts(deck, rank) {
-  const { history, playDraw } = deck;
+/** A colour pair in a few figures: the overview before the archetypes. */
+function inkDeckFacts(deck, rank) {
   return {
     rank,
     deck: deckColorName(deck.colors),
+    playRate: round1(deck.playRate),
+    playRateChange: round1(deck.deltaPlayRate),
+    playRateTrend: deck.playRateChange ? CHANGE[deck.playRateChange.signal] : null,
+    winRate: round1(deck.winRate),
+    winRateVs50: VS_50[deck.signal],
+  };
+}
+
+/**
+ * The top archetypes' names as said aloud: duels.ink's name, with the key cards only when two of
+ * them share both name and colours (the page's « Midrange · He Hurled », without the dot).
+ */
+function spokenNames(top) {
+  const base = (d) => d.archetype ?? d.label;
+  const id = (d) => `${d.colors.join('/')}|${base(d)}`;
+  const shared = (d) => top.filter((other) => id(other) === id(d)).length > 1;
+  return new Map(top.map((d) => [d.key, shared(d) ? d.label.replace(/ · /g, ' ') : base(d)]));
+}
+
+/** An archetype in detail, with its colours so it is never mistaken for another. */
+function archetypeFacts(deck, rank, names) {
+  const { history, playDraw } = deck;
+  return {
+    rank,
+    archetype: names.get(deck.key),
+    colors: deckColorName(deck.colors),
     playRate: round1(deck.playRate),
     playRateLastWeek: round1(deck.previous?.playRate),
     playRateChange: round1(deck.deltaPlayRate),
     playRateTrend: deck.playRateChange ? CHANGE[deck.playRateChange.signal] : null,
     winRate: round1(deck.winRate),
-    winRateRange: deck.ci.map(round1),
     winRateVs50: VS_50[deck.signal],
     winRateLastWeek: round1(deck.previous?.winRate),
     winRateChange: round1(deck.deltaWinRate),
@@ -48,25 +76,17 @@ function deckFacts(deck, rank) {
   };
 }
 
-function matchupFacts(report, relevance) {
+/** The matchups between the top archetypes, each pair once, from the favoured side. */
+function archetypeMatchupFacts(report, relevance, top, names) {
   if (!relevance.matchups.ok) return { reliable: false, reason: relevance.matchups.reason };
-  const { cells, weeks } = report.matchups;
-  const decks = report.topDecks ?? report.decks;
-  const top = new Set(decks.slice(0, MATCHUP_DECKS).map((d) => d.key));
-  const named = new Map(decks.map((d) => [d.key, deckColorName(d.colors)]));
-  const solid = cells.filter(
-    (c) =>
-      !c.mirror &&
-      c.winRate != null &&
-      c.games >= report.options.minMatchupGames &&
-      top.has(c.row) &&
-      top.has(c.col),
-  );
-  // Each pair once, from the favoured side
-  const lopsided = solid
+  const keys = new Set(top.map((d) => d.key));
+  const named = new Map(top.map((d) => [d.key, `${names.get(d.key)} ${deckColorName(d.colors)}`]));
+  const { cells, weeks, unit } = report.matchups;
+  const between = cells.filter((c) => !c.mirror && keys.has(c.row) && keys.has(c.col));
+  const pairs = between
+    .filter((c) => c.winRate != null && c.games >= report.options.minMatchupGames)
     .filter((c) => c.winRate > 50)
     .sort((a, b) => b.winRate - a.winRate)
-    .slice(0, MATCHUPS)
     .map((c) => ({
       favourite: named.get(c.row),
       against: named.get(c.col),
@@ -74,23 +94,46 @@ function matchupFacts(report, relevance) {
       games: c.games,
     }));
   // Clear moves this week, from the side that gained
-  const moved = cells
+  const moved = between
     .filter((c) => c.trend === 'up')
     .map((c) => ({
-      deck: named.get(c.row),
+      archetype: named.get(c.row),
       against: named.get(c.col),
       winRateThisWeek: round1(c.thisWeek.winRate),
       winRateBefore: round1(c.before.winRate),
     }));
-  return { reliable: true, weeksSummed: weeks.length, lopsided, clearMovesThisWeek: moved };
+  return {
+    reliable: true,
+    weeksSummed: weeks.length,
+    // Archetype matchups count single games, even in best-of-three
+    unit: unit.many,
+    favoured: pairs,
+    clearMovesThisWeek: moved,
+  };
+}
+
+/** The top archetypes of a report by archetype, or why there are none. */
+function archetypesFacts(report) {
+  const relevance = chartRelevance(report);
+  if (!relevance.week.ok) return { available: false, reason: relevance.week.reason };
+  const top = report.topDecks.slice(0, TOP_ARCHETYPES);
+  const names = spokenNames(top);
+  return {
+    available: true,
+    // Share of the week's decks duels.ink recognises as an archetype (%)
+    recognisedDecks: Math.round(100 * report.coverage),
+    top: top.map((deck, i) => archetypeFacts(deck, i + 1, names)),
+    matchups: archetypeMatchupFacts(report, relevance, top, names),
+  };
 }
 
 /**
- * @param {object} report from buildReport (default trend window: the history needs it)
+ * @param {object} report from buildReport, by inks (default trend window)
  * @param {object} relevance from chartRelevance(report)
+ * @param {object | null} [archetypes] the same week by archetype, or null when it has none (or
+ *   too few decks recognised to say anything by archetype)
  */
-export function buildPodcastFacts(report, relevance) {
-  // The most played decks only, as before the charts listed more
+export function buildPodcastFacts(report, relevance, archetypes = null) {
   const { week, previousWeek, unit, summary } = report;
   const decks = report.topDecks ?? report.decks;
   const name = (deck) => (deck ? deckColorName(deck.colors) : null);
@@ -118,14 +161,20 @@ export function buildPodcastFacts(report, relevance) {
     comparedWithLastWeek: Boolean(previousWeek),
     // Who goes first wins this share of games, over the matchup window
     firstPlayerWinRate: round1(report.matchups.firstPlayerWinRate),
-    headlines: {
-      mostPlayed: name(summary.topDeck),
-      risers: summary.risers.map((d) => ({ deck: name(d), change: round1(d.deltaPlayRate) })),
-      fallers: summary.fallers.map((d) => ({ deck: name(d), change: round1(d.deltaPlayRate) })),
-      // Ranked on the interval's lower bound: a small lucky sample doesn't win
-      bestWinRate: name(summary.bestWinRate),
+    // First part: the colour pairs, a quick overview
+    colorPairs: {
+      headlines: {
+        mostPlayed: name(summary.topDeck),
+        risers: summary.risers.map((d) => ({ deck: name(d), change: round1(d.deltaPlayRate) })),
+        fallers: summary.fallers.map((d) => ({ deck: name(d), change: round1(d.deltaPlayRate) })),
+        // Ranked on the interval's lower bound: a small lucky sample doesn't win
+        bestWinRate: name(summary.bestWinRate),
+      },
+      decks: decks.slice(0, INK_DECKS).map((deck, i) => inkDeckFacts(deck, i + 1)),
     },
-    decks: decks.map((deck, i) => deckFacts(deck, i + 1)),
-    matchups: matchupFacts(report, relevance),
+    // Second part: the archetypes that shape the meta, in detail
+    archetypes: archetypes
+      ? archetypesFacts(archetypes)
+      : { available: false, reason: 'Trop peu de decks reconnus par archétype cette semaine' },
   };
 }
