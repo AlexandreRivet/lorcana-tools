@@ -78,13 +78,18 @@ that set's games, stored in `data/<queue>@<era>/`. The release week then holds o
 played after the release, rather than a mix of two sets. Era keys are in the API's `meta.eras`;
 an unknown key would silently give the current era, so the collector rejects it.
 
-Right now: `core-bo1@set-14-core` and `core-bo3@set-14-core` first, then the closed Set 14
-betas, `quick-play-core-set14` and `core-bo3-set14`, kept for the page (they get no new weeks,
-so the digest never picks them again). At a new set: put its betas first during the beta, then
-`core-bo1@<new era>` and `core-bo3@<new era>` at release. A closed queue keeps the eras it had
-while open, since the API then answers with its format's eras, and a ranked queue kept to an
-earlier set keeps that set's name. The betas are unranked quick play: players experiment and
-skill levels are mixed, so read them as an early signal.
+Every stat is kept to the top of the ladder: a `+<rank>` suffix applies the API's `ranks` filter,
+which keeps the games where **both** players are at that rank or above (`+legendary`: Legendary,
+Epic, Enchanted, Iconic; `+super-rare` and the others work the same way). An unknown rank would be
+silently ignored, so the collector checks `meta.appliedRanks`. The filter only exists on ranked
+queues: the unranked betas can't be collected this way. In the week of October 11, Legendary and
+above was 23 569 of the 137 103 BO1 games, and 828 of the 31 858 BO3 matches: BO3 matchups stay
+thin until a few weeks add up.
+
+Right now: `core-bo1@set-14-core+legendary` and `core-bo3@set-14-core+legendary`. At a new set,
+switch both to `<queue>@<new era>+legendary` at release. A closed queue keeps the eras it had while
+open, since the API then answers with its format's eras, and a ranked queue kept to an earlier set
+keeps that set's name.
 
 In BO3 queues the API counts decks and matchups in **matches** (and `activity.totalGames` in
 single games): win rates are match win rates, and every count is shown as "matchs".

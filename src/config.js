@@ -10,13 +10,12 @@ export const config = {
    *
    * `<queue>@<era>` keeps only one set's games (era keys from meta.eras): the ranked queues keep
    * their id from one set to the next, and a release week would otherwise mix two sets.
+   * `+<rank>` keeps the games where both players are at that rank or above (ranked queues only).
    */
   queues: [
-    'core-bo1@set-14-core',
-    'core-bo3@set-14-core',
-    // Set 14 betas, closed at release: kept for the page
-    'quick-play-core-set14',
-    'core-bo3-set14',
+    // The top of the ladder only: games between two Legendary players or above
+    'core-bo1@set-14-core+legendary',
+    'core-bo3@set-14-core+legendary',
   ],
 
   /**

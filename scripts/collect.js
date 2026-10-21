@@ -1,10 +1,12 @@
 // Stores every duels.ink week in data/<queue>/weeks/, the one in progress included.
 // On the first run, backfills every week the API still exposes. A queue that fails doesn't stop
 // the others; the run only fails when no queue could be collected.
-// Usage: npm run collect [-- queue …]   (a queue id, or <queue>@<era> for one set's games only)
+// Usage: npm run collect [-- queue …]   (a queue id, <queue>@<era> for one set's games only, and
+// +<rank> for the games where both players are at that rank or above: core-bo1@set-14-core+legendary)
 import { setTimeout as sleep } from 'node:timers/promises';
 import { config } from '../src/config.js';
 import { fetchMeta } from '../src/lib/duels-api.js';
+import { parseQueueId } from '../src/lib/queues.js';
 import { readAllWeeks, readIndex, readWeek, writeIndex, writeWeek } from '../src/lib/store.js';
 
 // 60 requests / 60 s per IP: stay below it.
@@ -109,6 +111,8 @@ function toSnapshot(queue, week, { data, etag }) {
     fetchedAt: new Date().toISOString(),
     etag,
     totalGames: data.activity.totalGames,
+    // The week's games for every rank, as availableWeeks counts them: tells when to fetch again
+    weekGames: week.totalGames,
     colorPairs: data.colorPairs.map(({ colors, games, wins, winRate, firstPlayerWinRate }) => ({
       colors,
       games,
@@ -132,14 +136,20 @@ function toSnapshot(queue, week, { data, etag }) {
 }
 
 async function collectQueue(id) {
-  // <queue>@<era>: that set's games only, stored under the whole id
-  const [queue, era] = id.split('@');
+  // <queue>@<era>+<rank>: that set's games, between players of that rank or above, stored
+  // under the whole id
+  const { queue, era, minRank, ranks } = parseQueueId(id);
   console.log(`▸ ${id}`);
-  const { data: overview } = await fetchWithRetry({ queue, era });
+  const { data: overview } = await fetchWithRetry({ queue, era, ranks });
   const { meta } = overview;
   // An unknown era key silently falls back to the current one
   if (era && meta.selectedEraKey !== era) {
     throw new Error(`Unknown era ${era} (got ${meta.selectedEraKey})`);
+  }
+  // Unknown rank names are silently ignored, and an unranked queue ignores them all
+  const applied = [...(meta.appliedRanks ?? [])].sort().join(',');
+  if (ranks && applied !== [...ranks].sort().join(',')) {
+    throw new Error(`Rank filter not applied: asked ${ranks.join(', ')}, got ${applied || 'none'}`);
   }
 
   // duels.ink recomputes the current week every night (~01:30 UTC) and freezes it after
@@ -152,12 +162,14 @@ async function collectQueue(id) {
     const stored = await readWeek(id, week.startDate);
     // Weeks stored before the archetypes were kept are fetched once more to add them
     const complete = stored && 'archetypes' in stored;
-    if (complete && stored.totalGames === week.totalGames) continue;
+    // Filtered by rank, the stored count is lower than availableWeeks' one: compare like for like
+    if (complete && (stored.weekGames ?? stored.totalGames) === week.totalGames) continue;
 
     await sleep(REQUEST_INTERVAL_MS);
     const res = await fetchWithRetry({
       queue,
       era,
+      ranks,
       period: `week:${week.startDate}`,
       etag: complete ? stored.etag : undefined,
     });
@@ -193,7 +205,8 @@ async function collectQueue(id) {
   // duels.ink names a ranked queue after the current set ("Core Set 14 BO1"): a queue kept to an
   // earlier set keeps the name it had while that set was the current one.
   const named = !era || meta.eras?.currentEra?.key === era;
-  const queueName = (named ? info?.name : previous?.queueName) ?? id;
+  const rankName = minRank ? ` · ${minRank} et plus` : '';
+  const queueName = (named && info ? `${info.name}${rankName}` : previous?.queueName) ?? id;
 
   await writeIndex(id, {
     queue: id,
@@ -202,6 +215,8 @@ async function collectQueue(id) {
     gameMode: info?.gameMode ?? null,
     // The set the queue is kept to (<queue>@<era>), or null for its whole lifetime
     era: eras.find((e) => e.key === era) ?? null,
+    // Lowest rank of both players (<queue>+<rank>), or null for every rank
+    minRank,
     // Once closed, a queue keeps the eras it had while open: the API then answers with its
     // format's eras, set releases a beta never played through.
     eras: open || !previous ? eras : previous.eras,

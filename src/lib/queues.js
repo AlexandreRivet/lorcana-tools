@@ -1,7 +1,37 @@
 /**
- * Picks the queue to feature (digest, page default) from the queues' indexes.
+ * Collected queue ids, and picks the queue to feature (digest, page default) from the queues'
+ * indexes.
  */
 const DAY_MS = 86_400_000;
+
+/** duels.ink's rank tiers, lowest first. */
+export const RANKS = [
+  'Common',
+  'Uncommon',
+  'Rare',
+  'Super Rare',
+  'Legendary',
+  'Epic',
+  'Enchanted',
+  'Iconic',
+];
+
+/**
+ * A collected queue's id: `<queue>[@<era>][+<rank>]`. `@<era>` keeps one set's games;
+ * `+<rank>` keeps the games where both players are at that rank or above (`+legendary`,
+ * `+super-rare`).
+ *
+ * @returns {{ queue: string, era: string | undefined, minRank: string | null, ranks: string[] | null }}
+ */
+export function parseQueueId(id) {
+  const [base, rank] = id.split('+');
+  const [queue, era] = base.split('@');
+  if (!rank) return { queue, era, minRank: null, ranks: null };
+  const slug = (name) => name.toLowerCase().replace(/\s+/g, '-');
+  const from = RANKS.findIndex((name) => slug(name) === rank.toLowerCase());
+  if (from < 0) throw new Error(`Unknown rank ${rank} in ${id} (${RANKS.map(slug).join(', ')})`);
+  return { queue, era, minRank: RANKS[from], ranks: RANKS.slice(from) };
+}
 
 /** End date (Saturday, YYYY-MM-DD) of the last week that is over, duels.ink weeks being Sunday–Saturday. */
 export function lastFinishedWeekEnd(today = new Date()) {
