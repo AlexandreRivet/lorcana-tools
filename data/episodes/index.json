@@ -5,8 +5,8 @@
         "startDate": "2026-10-11",
         "endDate": "2026-10-17"
       },
-      "title": "Émeraude-Acier prend la file",
-      "summary": "Le volume explose en best-of-one comme en best-of-three, et Émeraude-Acier grimpe de 4 à 5 points face à un Ambre-Émeraude toujours en tête mais en recul. Camille et Sacha se disputent la vraie force du nouveau favori, entre avantage du premier joueur et écart entre les formats.",
+      "title": "Midrange vert-gris, la pièce et le poids du nombre",
+      "summary": "Semaine du 11 au 17 octobre : le volume explose sur le Set 14 et Midrange vert-gris s'impose dans les deux formats, mais l'ordre de jeu pèse lourd en best-of-one et Detectives jaune-bleu dévisse en best-of-three.",
       "formats": [
         {
           "format": "bo1",
@@ -19,7 +19,7 @@
           "queueName": "Core Set 14 BO3"
         }
       ],
-      "duration": 321,
+      "duration": 385,
       "audio": "2026-10-11/episode.mp3",
       "script": "2026-10-11/script.json",
       "scriptModel": "claude-sonnet-5-5",

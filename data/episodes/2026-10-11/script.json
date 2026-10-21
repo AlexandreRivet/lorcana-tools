@@ -16,152 +16,194 @@
     }
   ],
   "model": "claude-sonnet-5-5",
-  "title": "Émeraude-Acier prend la file",
-  "summary": "Le volume explose en best-of-one comme en best-of-three, et Émeraude-Acier grimpe de 4 à 5 points face à un Ambre-Émeraude toujours en tête mais en recul. Camille et Sacha se disputent la vraie force du nouveau favori, entre avantage du premier joueur et écart entre les formats.",
+  "title": "Midrange vert-gris, la pièce et le poids du nombre",
+  "summary": "Semaine du 11 au 17 octobre : le volume explose sur le Set 14 et Midrange vert-gris s'impose dans les deux formats, mais l'ordre de jeu pèse lourd en best-of-one et Detectives jaune-bleu dévisse en best-of-three.",
   "lines": [
     {
       "speaker": "camille",
-      "text": "Bonjour à toutes et à tous, c'est dimanche, et voici la semaine du 11 au 17 octobre. Gros morceau : plus de 137 000 parties en best-of-one sur la file Core Set 14, près de 320 % de plus que la semaine d'avant. Ça s'est rué sur le ladder.",
+      "text": "Salut à tous, voici le point meta de la semaine du 11 au 17 octobre sur le Set 14. Première info : le volume explose, près de 320 % de parties en plus en best-of-one, et 286 % de matchs en plus en best-of-three.",
       "start": 0,
-      "end": 16.5
+      "end": 15.49
     },
     {
       "speaker": "sacha",
-      "text": "Et 31 858 matchs en best-of-three, plus 286 %. Je fais mon rabat-joie : la semaine précédente était toute mince, donc chaque évolution se mesure à une base fragile. Mon hypothèse, c'est que la file s'est remplie d'un coup. Pourquoi, je n'en sais rien.",
-      "start": 16.85,
-      "end": 32.46
+      "text": "Autant de parties, ça me rassure : les écarts d'un point ou deux deviennent lisibles. Et cette semaine, il y a une paire de couleurs qui fait beaucoup de bruit.",
+      "start": 15.84,
+      "end": 25.24
     },
     {
       "speaker": "camille",
-      "text": "Rabat-joie, ton deuxième prénom. Allez, best-of-one. Ambre-Émeraude reste le plus joué avec 18,9 %, mais il lâche 1,6 point. Et Émeraude-Acier bondit de 4,4 points, à 16,4 %. Pour moi, c'est le nouveau patron.",
-      "start": 32.81,
-      "end": 49.86
+      "text": "Le vert-gris ! Mais on commence par le best-of-one. Le jaune-vert reste la paire la plus jouée, 18,9 %, mais il recule de 1,6 point. Le vert-gris grimpe de 4,4 points, à 16,4 %, avec le meilleur taux de victoire, 54,2 %.",
+      "start": 25.59,
+      "end": 43.52
     },
     {
       "speaker": "sacha",
-      "text": "Patron, patron. Ambre-Émeraude est encore premier, et son taux de victoire est à 52,1 %, nettement au-dessus de 50 %. Il perd 1,4 point, c'est vrai, et là, ce n'est pas du bruit. Mais déchu, non.",
-      "start": 50.21,
-      "end": 65.75
+      "text": "Le jaune-bleu, lui, est à 50 % pile, donc pas distinguable de 50 %, ni bon ni mauvais. Et côté rouge, désolé Camille, le jaune-rouge est à 45,2 %.",
+      "start": 43.87,
+      "end": 56.91
     },
     {
       "speaker": "camille",
-      "text": "Concrètement, en face, tu vas croiser Émeraude-Acier, et lui est à 54,2 %. Le meilleur de la file. Tu le prends, point final.",
-      "start": 66.1,
-      "end": 75.67
+      "text": "Laisse-moi mes illusions. Passons aux archétypes, c'est là que ça se joue. En tête, Midrange vert-gris : 13,1 % de jeu, 4,3 points de plus que la semaine passée, et 55,8 % de victoires.",
+      "start": 57.26,
+      "end": 73.38
     },
     {
       "speaker": "sacha",
-      "text": "Regarde d'où viennent ces 54,2. À jouer en premier, 62,1 %. En second, 46,7 %. Plus de 15 points d'écart. Et le premier joueur gagne 56,8 % des parties cette semaine. En best-of-one, une part de ce taux, c'est la pièce.",
-      "start": 76.02,
-      "end": 95.97
+      "text": "Avec un détail qui change tout. En commençant, Midrange vert-gris gagne 62,4 % du temps, en jouant en second 45,5 %. Et sur l'ensemble du format, celui qui commence gagne 56,8 % des parties. Une bonne part de son score vient de la pièce.",
+      "start": 73.73,
+      "end": 96.18
     },
     {
       "speaker": "camille",
-      "text": "Le tirage, tu le subis avec tous les decks. Lui, il punit quand il commence, et c'est exactement pour ça que je le veux. Et ne me dis pas que son taux de victoire a baissé, il est dans le bruit statistique.",
-      "start": 96.32,
-      "end": 108.76
+      "text": "Et alors ? En ladder, tu lances la pièce, tu prends ce qu'on te donne. Midrange vert-gris, c'est le deck à battre, point. Concrètement, en face, tu vas en croiser tous les soirs.",
+      "start": 96.53,
+      "end": 109.36
     },
     {
       "speaker": "sacha",
-      "text": "Je ne dis rien du tout, je constate qu'il ne bouge pas de façon lisible. Mais on a fait du chemin : tu admets que sa force dépend de la pièce.",
-      "start": 109.11,
-      "end": 118.66
+      "text": "Justement. Son taux de victoire baisse de 2 points, une baisse nette, pendant que son taux de jeu monte. Il reste nettement au-dessus de 50 %, je ne dis pas le contraire, mais plus on le joue, moins il gagne.",
+      "start": 109.71,
+      "end": 123.08
     },
     {
       "speaker": "camille",
-      "text": "J'admets que ça m'est égal. Autre chose, qui fait mal à mon petit cœur : Ambre-Rubis. 6 % de jeu, 45,2 % de victoire, en dessous de 50 %. Et face à Émeraude-Acier, il prend 63,7 % dans la figure, sur près de 2 500 parties.",
-      "start": 119.01,
-      "end": 138.61
+      "text": "Il perd 2 points et il est encore à 55,8 %. Je signe tous les soirs.",
+      "start": 123.43,
+      "end": 129.62
     },
     {
       "speaker": "sacha",
-      "text": "Là, l'échantillon est gros, ça se lit sans précaution. Ton Rubis est un goût, pas un fait. À l'inverse, Ambre-Saphir est le troisième deck le plus joué, avec 14,6 %, et il est à 50 % pile. Ni bon ni mauvais, juste là.",
-      "start": 138.96,
-      "end": 154.02
+      "text": "Moi aussi, mais pas en jouant en second.",
+      "start": 129.97,
+      "end": 132.8
     },
     {
       "speaker": "camille",
-      "text": "Donc on passe en best-of-three, là où tu te sens chez toi.",
-      "start": 154.37,
-      "end": 158.58
+      "text": "Deuxième, Circle of Life jaune-vert : 10,8 % de jeu, stable, dans le bruit statistique, et 53,8 % de victoires.",
+      "start": 133.15,
+      "end": 143.13
     },
     {
       "speaker": "sacha",
-      "text": "Exactement, et l'image ressemble beaucoup. Ambre-Émeraude à 19,6 % de jeu, Émeraude-Acier à 17,8 %, en hausse de 5 points. Mais regarde le taux de victoire d'Ambre-Émeraude : 53,4 %, contre 56,7 % la semaine d'avant. C'est une baisse nette, et la plus marquée de ce format.",
-      "start": 158.93,
-      "end": 180.06
+      "text": "Lui aussi perd 1,7 point de taux de victoire. Mais l'écart entre commencer et jouer en second n'est que de 9 points, contre 16,8 points pour Midrange vert-gris. Et entre les deux, c'est presque un miroir : 51,6 % pour Midrange vert-gris sur 4292 parties, le duel le plus joué de la semaine.",
+      "start": 143.48,
+      "end": 165.58
     },
     {
       "speaker": "camille",
-      "text": "Ha ! Donc je disais vrai, il se fait dépasser.",
-      "start": 180.41,
-      "end": 183.76
+      "text": "Troisième, Control jaune-bleu, 7,4 % de jeu et 50,1 % de victoires. Un contrôle à 50, franchement, je m'ennuie.",
+      "start": 165.93,
+      "end": 176.61
     },
     {
       "speaker": "sacha",
-      "text": "Il se fait rattraper en taux de victoire, pas dépasser en popularité. Et Émeraude-Acier est à 56,2 %. Ici, à jouer en second, il reste à 53,3 %, donc au-dessus de 50. Le premier joueur ne gagne que 53,1 % en best-of-three. Je te concède que ça renforce ton argument.",
-      "start": 184.11,
-      "end": 209.65
+      "text": "Pas distinguable de 50 %, donc rien à en dire sur la force. Mais regarde l'ordre de jeu : 56,8 % en commençant, 38,9 % en jouant en second. C'est le plus gros écart des cinq, 17,9 points.",
+      "start": 176.96,
+      "end": 192.9
     },
     {
       "speaker": "camille",
-      "text": "Mets ça par écrit. Tu concèdes, Sacha.",
-      "start": 210,
-      "end": 213.64
+      "text": "Detectives jaune-bleu, lui, monte à 5,4 % de jeu, mais lâche 4,2 points de victoire, à 51,9 %.",
+      "start": 193.25,
+      "end": 202.69
     },
     {
       "speaker": "sacha",
-      "text": "Je concède sur ce point précis. Le même deck, 62 % à jouer en premier en best-of-one, 60 % en best-of-three. Sa vraie force se lit mieux quand on peut rejouer la partie.",
-      "start": 213.99,
-      "end": 227.71
+      "text": "Il bat Control jaune-bleu 61,7 % du temps sur 1141 parties. Mais face à Midrange vert-gris, c'est l'inverse : 62,8 % pour Midrange vert-gris sur 1984 parties. Le deck qui monte tombe sur le deck qui domine.",
+      "start": 203.04,
+      "end": 221.25
     },
     {
       "speaker": "camille",
-      "text": "Il y a un deck qui fuit partout, par contre : Émeraude-Saphir. Moins 2,2 points de jeu dans les deux formats.",
-      "start": 228.06,
-      "end": 235.1
+      "text": "Allez, best-of-three, le terrain de jeu de Sacha.",
+      "start": 221.6,
+      "end": 225.18
     },
     {
       "speaker": "sacha",
-      "text": "Et ça se comprend. En best-of-three, Ambre-Émeraude le bat dans 70,4 % des matchs, sur 538 matchs. Face aux deux leaders, il se fait manger. En best-of-one, c'est 61,4 % pour Ambre-Émeraude, sur plus de 2 700 parties. Les joueurs ont lu les matchups.",
-      "start": 235.45,
-      "end": 254.82
+      "text": "Et déjà, l'avantage de commencer tombe à 53,1 %, contre 56,8 % en best-of-one. Ça aide à lire le reste. Le vert-gris monte de 5 points à 17,8 %, avec 56,2 % de victoires, et le jaune-vert reste premier à 19,6 %.",
+      "start": 225.53,
+      "end": 246.59
     },
     {
       "speaker": "camille",
-      "text": "Un truc qui diverge entre les formats, ou pas ?",
-      "start": 255.17,
-      "end": 259.05
+      "text": "Tu vois, le vert-gris tient bien.",
+      "start": 246.94,
+      "end": 249.19
     },
     {
       "speaker": "sacha",
-      "text": "Améthyste-Acier. En best-of-one, 50,4 %, pas distinguable de 50. En best-of-three, 48,5 %, en dessous. C'est un petit écart, donc je ne m'emballe pas, mais ça mérite qu'on regarde si ça se confirme.",
-      "start": 259.4,
-      "end": 274.79
+      "text": "Oui, et Midrange vert-gris aussi : 15,3 % de jeu, 58,2 % de victoires, même s'il perd 3,3 points. En commençant, 61,6 %, en jouant en second 48,2 %. L'écart se réduit à 13,4 points. Je te l'accorde, Camille : c'est le deck à battre dans les deux formats.",
+      "start": 249.54,
+      "end": 271.77
     },
     {
       "speaker": "camille",
-      "text": "Bon, la semaine prochaine, moi, je surveille si Émeraude-Acier continue de grimper et s'il ravit la première place en taux de jeu. Et si Ambre-Émeraude s'enfonce encore ou s'il se stabilise.",
-      "start": 275.14,
-      "end": 287.29
+      "text": "Je le note. Sacha admet que j'avais raison.",
+      "start": 272.12,
+      "end": 275.17
     },
     {
       "speaker": "sacha",
-      "text": "Moi, je regarde d'abord si le volume se calme, parce que comparer à une semaine plus solide rendra les évolutions plus fiables. Et surtout le taux de victoire d'Émeraude-Acier quand il joue en second en best-of-one. S'il remonte au-dessus de 50, je m'incline.",
-      "start": 287.64,
-      "end": 306.23
+      "text": "Sur celui-là. Regarde plutôt Circle of Life jaune-vert : 55,9 % de victoires, et seulement 3,9 points d'écart entre commencer et jouer en second. C'est le plus régulier de la semaine.",
+      "start": 275.52,
+      "end": 290.29
     },
     {
       "speaker": "camille",
-      "text": "Je note. Cet épisode est généré automatiquement à partir des statistiques de duels.ink, et les voix aussi. Bonne semaine et bons duels à tous.",
-      "start": 306.58,
-      "end": 315.95
+      "text": "Mais le gros mouvement, c'est Detectives jaune-bleu. Il perd 8,1 points, à 54,4 %. Huit points en une semaine !",
+      "start": 290.64,
+      "end": 301.79
     },
     {
       "speaker": "sacha",
-      "text": "Les graphes sont sur Discord, pour vérifier que je n'ai rien inventé. À dimanche.",
-      "start": 316.3,
-      "end": 320.57
+      "text": "Une baisse nette, oui. Et Midrange vert-gris le bat 60 % du temps sur 1669 parties. Hypothèse : plus de joueurs ont Midrange vert-gris en face, et ça pèse sur Detectives jaune-bleu. Mais ce n'est qu'une hypothèse.",
+      "start": 302.14,
+      "end": 317.97
+    },
+    {
+      "speaker": "camille",
+      "text": "Moi, je dis que Detectives jaune-bleu rebondit. Un deck qui bat Control jaune-bleu 65,5 % du temps, ça ne disparaît pas.",
+      "start": 318.32,
+      "end": 327.55
+    },
+    {
+      "speaker": "sacha",
+      "text": "Sur 679 parties seulement. Je préfère attendre une deuxième semaine avant de parier.",
+      "start": 327.9,
+      "end": 333.46
+    },
+    {
+      "speaker": "camille",
+      "text": "Et côté couleurs, le violet-gris recule en best-of-three, à 48,5 %, alors qu'il était à 50,4 % en best-of-one.",
+      "start": 333.81,
+      "end": 344.6
+    },
+    {
+      "speaker": "sacha",
+      "text": "Un écart entre les deux formats, c'est exactement ce que je surveille.",
+      "start": 344.95,
+      "end": 349.3
+    },
+    {
+      "speaker": "camille",
+      "text": "La semaine prochaine, je regarde le violet-rouge, qui gagne 0,9 point de jeu en best-of-one. Et surtout si Midrange vert-gris continue à perdre du taux de victoire en étant autant joué.",
+      "start": 349.65,
+      "end": 363.04
+    },
+    {
+      "speaker": "sacha",
+      "text": "Moi, je regarde Detectives jaune-bleu en best-of-three : est-ce que sa chute se confirme ou pas, avec un échantillon solide. Et l'écart entre commencer et jouer en second, dans les deux formats.",
+      "start": 363.39,
+      "end": 375.69
+    },
+    {
+      "speaker": "camille",
+      "text": "Rappel : cet épisode est généré automatiquement à partir des statistiques de duels.ink, et les voix aussi. Bonne semaine et bonnes parties !",
+      "start": 376.04,
+      "end": 384.87
     }
   ]
 }
