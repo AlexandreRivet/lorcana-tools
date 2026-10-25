@@ -54,8 +54,15 @@
       "startDate": "2026-10-18",
       "endDate": "2026-10-24",
       "label": "Oct 18 - 24, 2026",
-      "totalGames": 37282,
-      "updatedAt": "2026-10-24T01:31:40.900Z"
+      "totalGames": 42567,
+      "updatedAt": "2026-10-25T06:31:51.217Z"
+    },
+    {
+      "startDate": "2026-10-25",
+      "endDate": "2026-10-31",
+      "label": "Oct 25 - 31, 2026",
+      "totalGames": 1125,
+      "updatedAt": "2026-10-25T06:31:53.515Z"
     }
   ]
 }
