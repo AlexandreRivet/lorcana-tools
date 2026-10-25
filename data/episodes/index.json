@@ -2,6 +2,31 @@
   "episodes": [
     {
       "week": {
+        "startDate": "2026-10-18",
+        "endDate": "2026-10-24"
+      },
+      "title": "Le vert-gris vacille, le rouge monte",
+      "summary": "Semaine du 18 au 24 octobre : en best-of-one, le Midrange vert-gris reste devant mais vit surtout de l'ordre de jeu. En best-of-three, le vert-gris perd du terrain et les Detectives jaune-bleu en profitent.",
+      "formats": [
+        {
+          "format": "bo1",
+          "queue": "core-bo1@set-14-core+legendary",
+          "queueName": "Core Set 14 BO1 · Legendary et plus"
+        },
+        {
+          "format": "bo3",
+          "queue": "core-bo3@set-14-core+legendary",
+          "queueName": "Core Set 14 BO3 · Legendary et plus"
+        }
+      ],
+      "duration": 387,
+      "audio": "2026-10-18/episode.mp3",
+      "script": "2026-10-18/script.json",
+      "scriptModel": "claude-sonnet-5-5",
+      "voiceModel": "gpt-4o-mini-tts"
+    },
+    {
+      "week": {
         "startDate": "2026-10-11",
         "endDate": "2026-10-17"
       },

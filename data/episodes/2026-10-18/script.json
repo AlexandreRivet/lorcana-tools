@@ -1,0 +1,209 @@
+{
+  "week": {
+    "startDate": "2026-10-18",
+    "endDate": "2026-10-24"
+  },
+  "formats": [
+    {
+      "format": "bo1",
+      "queue": "core-bo1@set-14-core+legendary",
+      "queueName": "Core Set 14 BO1 · Legendary et plus"
+    },
+    {
+      "format": "bo3",
+      "queue": "core-bo3@set-14-core+legendary",
+      "queueName": "Core Set 14 BO3 · Legendary et plus"
+    }
+  ],
+  "model": "claude-sonnet-5-5",
+  "title": "Le vert-gris vacille, le rouge monte",
+  "summary": "Semaine du 18 au 24 octobre : en best-of-one, le Midrange vert-gris reste devant mais vit surtout de l'ordre de jeu. En best-of-three, le vert-gris perd du terrain et les Detectives jaune-bleu en profitent.",
+  "lines": [
+    {
+      "speaker": "camille",
+      "text": "Bonjour à toutes et à tous, on est dimanche, on fait le point sur la semaine du 18 au 24 octobre sur le Set 14. Et il y avait du monde : en best-of-one, 42 567 parties, contre 23 569 la semaine d'avant, donc 80,6 % de plus.",
+      "start": 0,
+      "end": 18.19
+    },
+    {
+      "speaker": "sacha",
+      "text": "Et en best-of-three, 1 903 matchs contre 828. Plus de volume, donc des chiffres un peu plus solides. Un peu, je précise.",
+      "start": 18.54,
+      "end": 28.29
+    },
+    {
+      "speaker": "camille",
+      "text": "Évidemment, il précise. Allez, best-of-one, les couleurs. Le vert-gris reste en tête avec 22 % des decks, le jaune-vert juste derrière à 20 %.",
+      "start": 28.64,
+      "end": 38.33
+    },
+    {
+      "speaker": "sacha",
+      "text": "Mais les deux reculent. Le vert-gris perd 2,5 points, le jaune-vert 4,9. Le vert-gris garde quand même le meilleur taux de victoire, 51,6 %, au-dessus de 50 %.",
+      "start": 38.68,
+      "end": 52.11
+    },
+    {
+      "speaker": "camille",
+      "text": "Et ce qui monte, c'est mon rayon. Le vert-rouge gagne 2,2 points, le violet-rouge 1,6. Le rouge revient, je l'ai senti avant tout le monde.",
+      "start": 52.46,
+      "end": 63.84
+    },
+    {
+      "speaker": "sacha",
+      "text": "Tu l'as senti, certes. Mais regarde le jaune-gris : il monte de 1,9 point, et il gagne 47,8 % de ses parties, en dessous de 50 %. Ça monte, mais ça ne gagne pas.",
+      "start": 64.19,
+      "end": 77.26
+    },
+    {
+      "speaker": "camille",
+      "text": "Bon, passons aux archétypes, c'est là que ça se joue. Le Midrange vert-gris fait 19,1 % de la meta. Concrètement, presque une partie sur cinq, tu tombes dessus. Et il gagne 51,8 %.",
+      "start": 77.61,
+      "end": 93.25
+    },
+    {
+      "speaker": "sacha",
+      "text": "Il y a un détail qui change tout. En commençant, il gagne 60,3 %. En jouant en second, 43 %. Un écart de 17,3 points, alors que le premier joueur gagne déjà 57,2 % sur l'ensemble du format.",
+      "start": 93.6,
+      "end": 113.89
+    },
+    {
+      "speaker": "camille",
+      "text": "Ça, c'est le deck qui est bon quand il commence, c'est tout. Et un soir de ladder, tu commences une fois sur deux. Je prends.",
+      "start": 114.24,
+      "end": 120.63
+    },
+    {
+      "speaker": "sacha",
+      "text": "Moi je regarde le Midrange violet-gris : 17,8 points d'écart, presque pareil, et un taux de victoire de 50,4 %, pas distinguable de 50 %. Donc l'ordre de jeu fait une bonne partie du travail, chez les deux.",
+      "start": 120.98,
+      "end": 136.34
+    },
+    {
+      "speaker": "camille",
+      "text": "Ou alors le vert-gris est simplement meilleur que le violet-gris. Et les matchups me donnent raison, non ?",
+      "start": 136.69,
+      "end": 143.36
+    },
+    {
+      "speaker": "sacha",
+      "text": "Pas vraiment. Sur deux semaines cumulées, le Midrange violet-gris bat le Midrange vert-gris 54,9 % sur 906 parties. Et le Midrange vert-gris contre Circle of Life jaune-vert, le duel le plus joué avec 2 398 parties : 50,5 %. Une pièce.",
+      "start": 143.71,
+      "end": 161.38
+    },
+    {
+      "speaker": "camille",
+      "text": "D'accord, d'accord. Mais le Midrange vert-gris écrase les Detectives jaune-bleu, 57,9 % sur 964 parties. Ça, c'est solide.",
+      "start": 161.73,
+      "end": 172.47
+    },
+    {
+      "speaker": "sacha",
+      "text": "Ça, oui, je te le concède. Mais les Detectives jaune-bleu restent bons : 52,3 % au total, et ils battent le Control jaune-bleu 70,8 % sur 195 parties. Le Control jaune-bleu, lui, est à 45,8 %, nettement en dessous de 50 %.",
+      "start": 172.82,
+      "end": 191.54
+    },
+    {
+      "speaker": "camille",
+      "text": "Et Circle of Life jaune-vert, 15 % de la meta, 51,4 %. Solide, sans éclat. Ah, et pas d'évolution à commenter sur les archétypes cette semaine, rien de comparable avec la précédente.",
+      "start": 191.89,
+      "end": 203.67
+    },
+    {
+      "speaker": "sacha",
+      "text": "Exactement. Donc pas de fausse tendance pour moi, ce qui m'attriste un peu.",
+      "start": 204.02,
+      "end": 208.74
+    },
+    {
+      "speaker": "camille",
+      "text": "Best-of-three maintenant. Là, le vert-gris dégringole : 30 % des decks, mais moins 8,3 points. Gros recul.",
+      "start": 209.09,
+      "end": 217.82
+    },
+    {
+      "speaker": "sacha",
+      "text": "Et son taux de victoire est à 47,4 %, pas distinguable de 50 %. Le jaune-vert baisse aussi de 3,9 points. Les joueurs en best-of-three ont l'air de chercher autre chose.",
+      "start": 218.17,
+      "end": 232.55
+    },
+    {
+      "speaker": "camille",
+      "text": "Ils cherchent du rouge, voilà. Le vert-rouge gagne 4,3 points, le jaune-violet 4,2.",
+      "start": 232.9,
+      "end": 240.29
+    },
+    {
+      "speaker": "sacha",
+      "text": "Hausses nettes, d'accord. Mais leurs taux de victoire, 51,3 % et 50,7 %, ne se distinguent pas de 50 %. Ils montent parce qu'on les essaie, pas parce qu'ils ont fait leurs preuves.",
+      "start": 240.64,
+      "end": 254.67
+    },
+    {
+      "speaker": "camille",
+      "text": "Le violet-vert, lui, est à 57,8 %. Le meilleur, et au-dessus de 50 %. Je dis qu'il faut le jouer.",
+      "start": 255.02,
+      "end": 264.06
+    },
+    {
+      "speaker": "sacha",
+      "text": "Il ne pèse que 4,9 % des decks. Et Retro Device violet-vert, à 55,8 %, n'est pas distinguable de 50 %. Je suis content que tu aimes, mais ça reste un petit échantillon.",
+      "start": 264.41,
+      "end": 277.4
+    },
+    {
+      "speaker": "camille",
+      "text": "Tu me gâches mes découvertes ! Et le Midrange vert-gris ?",
+      "start": 277.75,
+      "end": 281.21
+    },
+    {
+      "speaker": "sacha",
+      "text": "Il fait encore 25,2 % des decks en best-of-three, avec 47,9 % de victoire, pas distinguable de 50 %. Et l'écart reste énorme : 62,1 % en commençant, 39,6 % en jouant en second. C'est 22,5 points, plus qu'en best-of-one.",
+      "start": 281.56,
+      "end": 302.38
+    },
+    {
+      "speaker": "camille",
+      "text": "Alors que le premier joueur ne gagne que 52,3 % en best-of-three. Donc ce deck-là est encore plus dépendant du dé.",
+      "start": 302.73,
+      "end": 311.29
+    },
+    {
+      "speaker": "sacha",
+      "text": "Voilà. Ce qui sort du lot, ce sont les Detectives jaune-bleu : 10 % des decks, 56,2 %, au-dessus de 50 %. Seul archétype nettement positif ici. Ruby R.E.D. vert-rouge, 54,8 % sur 5,8 % de présence, n'est pas distinguable de 50 %.",
+      "start": 311.64,
+      "end": 332.69
+    },
+    {
+      "speaker": "camille",
+      "text": "Tu vois, j'avais raison pour le rouge.",
+      "start": 333.04,
+      "end": 335.61
+    },
+    {
+      "speaker": "sacha",
+      "text": "Pas encore. Seulement 65 % des decks du best-of-three sont rattachés à un archétype, et les matchups manquent de parties : seulement 18 % des cases dépassent 100 parties. Je n'en dis rien.",
+      "start": 335.96,
+      "end": 349.33
+    },
+    {
+      "speaker": "camille",
+      "text": "La semaine prochaine, je surveille le rouge, le vert-rouge en best-of-one et Ruby R.E.D. vert-rouge en best-of-three. Si ça continue à monter, je gagne mon pari.",
+      "start": 349.68,
+      "end": 361.56
+    },
+    {
+      "speaker": "sacha",
+      "text": "Moi, je regarde si les Detectives jaune-bleu restent au-dessus de 50 % en best-of-three, et si le Midrange vert-gris finit par se distinguer de 50 %, dans un sens ou dans l'autre. Plus de parties, ce serait déjà un cadeau.",
+      "start": 361.91,
+      "end": 377.11
+    },
+    {
+      "speaker": "camille",
+      "text": "Dernier point : cet épisode est généré automatiquement à partir des statistiques de duels.ink, et les voix aussi. On se retrouve dimanche prochain.",
+      "start": 377.46,
+      "end": 386.94
+    }
+  ]
+}
