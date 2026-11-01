@@ -1,0 +1,245 @@
+{
+  "week": {
+    "startDate": "2026-10-25",
+    "endDate": "2026-10-31"
+  },
+  "formats": [
+    {
+      "format": "bo1",
+      "queue": "core-bo1@set-14-core+legendary",
+      "queueName": "Core Set 14 BO1 · Legendary et plus"
+    },
+    {
+      "format": "bo3",
+      "queue": "core-bo3@set-14-core+legendary",
+      "queueName": "Core Set 14 BO3 · Legendary et plus"
+    }
+  ],
+  "model": "claude-sonnet-5-5",
+  "title": "Le jaune prend le pouvoir",
+  "summary": "Semaine du 25 au 31 octobre : le volume explose dans les deux formats. En best-of-one, Detectives jaune-bleu est le seul du top cinq nettement au-dessus de 50 %. En best-of-three, vert-gris s'effondre et Circle of Life jaune-vert s'installe.",
+  "lines": [
+    {
+      "speaker": "camille",
+      "text": "Bonjour à tous, c'est le point meta de la semaine du 25 au 31 octobre, tiré des statistiques de duels.ink. Sacha, première info : ça a joué comme jamais.",
+      "start": 0,
+      "end": 12.3
+    },
+    {
+      "speaker": "sacha",
+      "text": "55 519 parties en best-of-one, 30,4 % de plus que la semaine d'avant. Et 3 047 matchs en best-of-three, 60,1 % de plus. Je précise quand même que le best-of-three reste un petit échantillon.",
+      "start": 12.65,
+      "end": 30.62
+    },
+    {
+      "speaker": "camille",
+      "text": "Il n'a pas attendu dix secondes pour tempérer. On commence par le best-of-one, là où ça va vite et où ça se joue le soir.",
+      "start": 30.97,
+      "end": 38.76
+    },
+    {
+      "speaker": "sacha",
+      "text": "Là où le premier joueur gagne 57,5 % des parties. Garde ce chiffre en tête, il va revenir.",
+      "start": 39.11,
+      "end": 47.11
+    },
+    {
+      "speaker": "camille",
+      "text": "Côté couleurs, jaune-vert reste la paire la plus jouée avec 19 %, mais en baisse nette. Juste derrière, vert-gris à 18,4 %, qui perd 3,7 points.",
+      "start": 47.46,
+      "end": 59.43
+    },
+    {
+      "speaker": "sacha",
+      "text": "Et vert-gris a le meilleur taux de victoire des paires, 51,3 %. Il baisse en popularité, pas en résultats.",
+      "start": 59.78,
+      "end": 67.71
+    },
+    {
+      "speaker": "camille",
+      "text": "Ceux qui montent, c'est jaune-violet, plus 4 points, et jaune-bleu, plus 3,5. Le ladder se jette sur le jaune.",
+      "start": 68.06,
+      "end": 77.58
+    },
+    {
+      "speaker": "sacha",
+      "text": "Alors que ces deux paires sont à 49,8 % et 50 %, pas distinguables de 50 %. Elles montent peut-être parce qu'elles plaisent, pas parce qu'elles gagnent. C'est une hypothèse.",
+      "start": 77.93,
+      "end": 89.25
+    },
+    {
+      "speaker": "camille",
+      "text": "Allez, les archétypes. Midrange vert-gris est en tête à 14,2 %, Circle of Life jaune-vert suit à 13 %.",
+      "start": 89.6,
+      "end": 98.19
+    },
+    {
+      "speaker": "sacha",
+      "text": "Les deux à 50,8 %, pas distinguables de 50 %. Et pour les archétypes, il n'y a pas de semaine précédente comparable, donc aucune évolution à commenter. On a seulement la photo de cette semaine.",
+      "start": 98.54,
+      "end": 111.62
+    },
+    {
+      "speaker": "camille",
+      "text": "La photo a un gagnant : Detectives jaune-bleu, 9,5 % de jeu et 52,1 % de victoires.",
+      "start": 111.97,
+      "end": 120.31
+    },
+    {
+      "speaker": "sacha",
+      "text": "Le seul du top cinq nettement au-dessus de 50 %. Je te l'accorde, ça mérite d'être dit.",
+      "start": 120.66,
+      "end": 127.26
+    },
+    {
+      "speaker": "camille",
+      "text": "Concrètement, en face, tu croises quoi ? Remember Merida jaune-violet bat Circle of Life jaune-vert à 60,9 % sur 1 065 parties. Et jaune-violet monte. Je dis qu'on va en voir partout.",
+      "start": 127.61,
+      "end": 142.14
+    },
+    {
+      "speaker": "sacha",
+      "text": "Sauf que Detectives jaune-bleu bat Remember Merida jaune-violet à 60,8 % sur 763 parties. Et Remember Merida jaune-violet termine à 49,9 % sur la semaine, pas distinguable de 50 %.",
+      "start": 142.49,
+      "end": 159.38
+    },
+    {
+      "speaker": "camille",
+      "text": "Ça reste un deck qui punit le plus joué. Je parie qu'il continue de grimper.",
+      "start": 159.73,
+      "end": 164.02
+    },
+    {
+      "speaker": "sacha",
+      "text": "Regarde plutôt l'ordre de jeu : 60,2 % en commençant, 39,5 % en jouant en second. Vingt points d'écart. Son taux de victoire raconte surtout le tirage au sort.",
+      "start": 164.37,
+      "end": 177.92
+    },
+    {
+      "speaker": "camille",
+      "text": "Midrange violet-gris fait pareil, 61,1 % contre 39,7 %. Mais il bat Midrange vert-gris à 58,6 % sur 764 parties.",
+      "start": 178.27,
+      "end": 191.42
+    },
+    {
+      "speaker": "sacha",
+      "text": "Il ne pèse que 4,9 % de jeu, donc ça ne dessine pas la meta. Le chiffre le plus solide, c'est Midrange vert-gris contre Detectives jaune-bleu : 56,7 % sur 1 441 parties.",
+      "start": 191.77,
+      "end": 206.53
+    },
+    {
+      "speaker": "camille",
+      "text": "Et Circle of Life jaune-vert contre Midrange vert-gris ?",
+      "start": 206.88,
+      "end": 210.62
+    },
+    {
+      "speaker": "sacha",
+      "text": "50,4 % sur 2 001 parties. Un pile ou face. Sur les deux archétypes les plus joués, aucun ne domine l'autre.",
+      "start": 210.97,
+      "end": 220.59
+    },
+    {
+      "speaker": "camille",
+      "text": "Bon, passons au best-of-three, ton terrain de jeu préféré.",
+      "start": 220.94,
+      "end": 225.24
+    },
+    {
+      "speaker": "sacha",
+      "text": "Le vrai Lorcana. Ici, le premier joueur gagne 52,8 %, bien moins qu'en best-of-one. Le format laisse plus de place au rattrapage.",
+      "start": 225.59,
+      "end": 236.55
+    },
+    {
+      "speaker": "camille",
+      "text": "Et la grosse nouvelle, c'est vert-gris : moins 12 points, à 18 % de jeu. Il s'effondre.",
+      "start": 236.9,
+      "end": 242.99
+    },
+    {
+      "speaker": "sacha",
+      "text": "Avec 50,6 % de victoires, pas distinguable de 50 %. Donc il baisse sans être puni par les résultats. En best-of-one il perdait seulement 3,7 points, l'écart entre les deux formats est net.",
+      "start": 243.34,
+      "end": 259.15
+    },
+    {
+      "speaker": "camille",
+      "text": "Pendant ce temps, jaune-vert passe en tête à 22,2 %, et jaune-bleu monte de 7,8 points à 20,2 %.",
+      "start": 259.5,
+      "end": 267.73
+    },
+    {
+      "speaker": "sacha",
+      "text": "Oui. Et violet-gris, lui, est à 43,4 %, en dessous de 50 %, pour 5,7 % de jeu. En best-of-one il était à 50,2 %.",
+      "start": 268.08,
+      "end": 280.87
+    },
+    {
+      "speaker": "camille",
+      "text": "Alors là, côté archétypes, Detectives jaune-bleu prend la première place avec 18,6 %. En best-of-one il n'était que troisième.",
+      "start": 281.22,
+      "end": 291.14
+    },
+    {
+      "speaker": "sacha",
+      "text": "À 51,1 %, pas distinguable de 50 %. Il est très joué, sans être prouvé meilleur.",
+      "start": 291.49,
+      "end": 298.68
+    },
+    {
+      "speaker": "camille",
+      "text": "Circle of Life jaune-vert, lui, est à 16,6 % de jeu et 53,2 % de victoires. Au-dessus de 50. Voilà le deck à jouer.",
+      "start": 299.03,
+      "end": 309.32
+    },
+    {
+      "speaker": "sacha",
+      "text": "Là-dessus je te suis, même si la paire jaune-vert affiche 52,4 %, pas distinguable de 50 %. Le détail qui m'intéresse, c'est l'ordre de jeu : 53,4 % en commençant, 50,7 % en jouant en second. Deux points et demi d'écart, contre dix en best-of-one.",
+      "start": 309.67,
+      "end": 329.01
+    },
+    {
+      "speaker": "camille",
+      "text": "Donc le même deck, mais bien moins dépendant du tirage au sort.",
+      "start": 329.36,
+      "end": 333.09
+    },
+    {
+      "speaker": "sacha",
+      "text": "Exactement, et ça explique peut-être son succès en best-of-three. Hypothèse, évidemment.",
+      "start": 333.44,
+      "end": 339.69
+    },
+    {
+      "speaker": "camille",
+      "text": "Derrière, Midrange vert-gris à 10,4 % et 49,7 %. Puis Touch Paradise vert-gris à 6,4 % et 52,5 %.",
+      "start": 340.04,
+      "end": 352.97
+    },
+    {
+      "speaker": "sacha",
+      "text": "Les deux sont pas distinguables de 50 %. Retro Device violet-vert ferme le top cinq à 4,2 % de jeu et 51,2 %, même constat. Et les matchups, je ne les commente pas : trop peu de parties par confrontation.",
+      "start": 353.32,
+      "end": 370.31
+    },
+    {
+      "speaker": "camille",
+      "text": "Le jour où tu commenteras un matchup en best-of-three, j'organise une fête. Pour la semaine prochaine, je surveille jaune-violet : s'il continue de grimper, je veux voir si Remember Merida jaune-violet tient son duel contre Circle of Life jaune-vert.",
+      "start": 370.66,
+      "end": 386.22
+    },
+    {
+      "speaker": "sacha",
+      "text": "Moi, je regarde si la chute de vert-gris en best-of-three se confirme, et si les chiffres de Touch Paradise vert-gris s'affirment avec plus de matchs. Et si les archétypes auront enfin une semaine de comparaison.",
+      "start": 386.57,
+      "end": 400.45
+    },
+    {
+      "speaker": "camille",
+      "text": "Voilà pour cette semaine. Rappel : cet épisode est généré automatiquement à partir des données de duels.ink, voix comprises. Bon dimanche, et à bientôt sur le ladder.",
+      "start": 400.8,
+      "end": 411.45
+    }
+  ]
+}

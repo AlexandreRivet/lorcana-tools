@@ -2,6 +2,31 @@
   "episodes": [
     {
       "week": {
+        "startDate": "2026-10-25",
+        "endDate": "2026-10-31"
+      },
+      "title": "Le jaune prend le pouvoir",
+      "summary": "Semaine du 25 au 31 octobre : le volume explose dans les deux formats. En best-of-one, Detectives jaune-bleu est le seul du top cinq nettement au-dessus de 50 %. En best-of-three, vert-gris s'effondre et Circle of Life jaune-vert s'installe.",
+      "formats": [
+        {
+          "format": "bo1",
+          "queue": "core-bo1@set-14-core+legendary",
+          "queueName": "Core Set 14 BO1 · Legendary et plus"
+        },
+        {
+          "format": "bo3",
+          "queue": "core-bo3@set-14-core+legendary",
+          "queueName": "Core Set 14 BO3 · Legendary et plus"
+        }
+      ],
+      "duration": 411,
+      "audio": "2026-10-25/episode.mp3",
+      "script": "2026-10-25/script.json",
+      "scriptModel": "claude-sonnet-5-5",
+      "voiceModel": "gpt-4o-mini-tts"
+    },
+    {
+      "week": {
         "startDate": "2026-10-18",
         "endDate": "2026-10-24"
       },
