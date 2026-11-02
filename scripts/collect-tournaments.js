@@ -73,7 +73,7 @@ function toCards(cards) {
 
 /**
  * Every public list of a tournament, by tournamentPlayerId: the whole field's, since a list tells
- * its player's sub-archetype (about 8 requests for 700 players). A tournament keeping its
+ * its player's archetype (about 8 requests for 700 players). A tournament keeping its
  * decklists private answers 403 decklists_private.
  */
 async function decklists(id) {

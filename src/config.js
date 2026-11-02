@@ -72,15 +72,9 @@ export const config = {
      */
     nearShare: 0.5,
     /**
-     * Sub-archetypes: the lists of one ink pair are grouped while they share, on average, at
-     * least this many cards (copies counted) out of 60. Lists of one build share 45 or more,
-     * of two builds of the same inks rarely 15.
-     */
-    subArchetypeShared: 30,
-    /**
-     * By sub-archetype, a tournament only counts when at least this share of its players outside
-     * the top cut have a public list: lists published for the top cut alone would put nearly
-     * every listed player in it.
+     * By archetype (known from public lists only), a tournament only counts when at least this
+     * share of its players outside the top cut have a public list: lists published for the top
+     * cut alone would put nearly every listed player in it.
      */
     minListShare: 0.5,
   },
@@ -128,16 +122,43 @@ export const config = {
     /** Simulated tournaments per run: ~1 s for 2 000 of 1 200 players. */
     simulations: 2000,
     /**
+     * Uncertainty: the matchups drawn again this many times, from the games they rest on, for
+     * the win rates' range; the simulation split into `uncertaintyBatches` batches, each on its
+     * own draw, for its chances' range. Ranges hold `uncertaintyLevel` of the draws (90 %).
+     */
+    uncertaintySamples: 100,
+    uncertaintyBatches: 20,
+    uncertaintyLevel: 0.9,
+    /**
      * Our players: on a deck the team masters better (or worse) than its average player, this
      * share of its simulated players play with that edge, counted apart (one at least per run).
      */
     teamShare: 0.05,
+  },
+
+  /**
+   * The ladder's archetypes, told apart by what they play on every page (src/lib/archetypes.js):
+   * cards shared, copies counted, out of 60.
+   */
+  archetypes: {
     /**
-     * By archetype, a tournament decklist goes to the ladder archetype whose average list shares
-     * the most cards with it (copies counted, out of 60), if at least this many; otherwise to its
-     * ink pair's "Autres listes". A list and its own archetype's average share 50 or so.
+     * A week's archetype is one of today's when their average lists share at least this many:
+     * one archetype from week to week shares 50 to 60, two near builds of one inks up to 48
+     * (they are then matched one to one, closest first).
      */
-    minSharedCards: 30,
+    weekShared: 40,
+    /**
+     * A tournament decklist goes to the archetype whose average list shares the most cards with
+     * it, if at least this many; otherwise to its ink pair's "Autres listes". A list and its own
+     * archetype's average share 50 or so.
+     */
+    listShared: 30,
+    /**
+     * Two of today's archetypes of one inks are variants of one deck, merged, when their average
+     * lists share at least this many (He Hurled and Woolter, 48; then the closest pair is 43.5,
+     * where merging would start chaining distinct decks together).
+     */
+    mergeShared: 45,
   },
 };
 

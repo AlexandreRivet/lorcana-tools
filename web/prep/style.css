@@ -43,6 +43,19 @@
   width: 60px;
 }
 
+/* A figure with its range under it, in small muted type */
+.with-range {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-end;
+  line-height: 1.25;
+}
+
+.range {
+  color: var(--muted);
+  font-size: 11px;
+}
+
 /* Over 50 % / under, in the deck table's win rates */
 .good {
   color: #2a8934;
@@ -133,6 +146,51 @@
   .scenario {
     position: static;
   }
+}
+
+/* Mulligan guide: on the play and on the draw side by side, then stacked on a phone */
+.mulligan-seats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 360px), 1fr));
+  gap: 8px 32px;
+  margin-top: 8px;
+}
+
+.mulligan-seat-title {
+  margin: 8px 0 0;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.mulligan-list h4 {
+  margin: 8px 0 4px;
+  color: var(--text-2);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.mulligan-list ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+
+.mulligan-list li {
+  display: flex;
+  gap: 0 8px;
+  padding: 3px 0;
+  border-bottom: 1px solid var(--grid);
+}
+
+.mulligan-card {
+  flex: 1 1 auto;
+}
+
+.mulligan-figures {
+  color: var(--text-2);
+  white-space: nowrap;
 }
 
 .tier-title {

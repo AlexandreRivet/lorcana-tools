@@ -14,9 +14,15 @@ import {
   keyCards,
   ladderCards,
   ladderSignature,
+  mulliganGuide,
   matchMatrix,
+  quantile,
+  random,
+  reconcileArchetypes,
+  sampleRates,
   withEdge,
 } from '../../src/lib/forecast.js';
+import { variantSummary } from '../../src/lib/archetypes.js';
 import { formatInt, formatPct, formatUpdatedAt } from '../../src/lib/format.js';
 import { INKS, deckName } from '../../src/lib/inks.js';
 import { isWeekComplete } from '../../src/lib/queues.js';
@@ -148,6 +154,19 @@ function winCell(value, digits = 1) {
   return el('span', tone ? { class: tone } : {}, formatPct(value, digits));
 }
 
+/** "51,2–55,0": a range of percentages, without the unit. */
+const rangeText = ([low, high], digits = 1) =>
+  `${low.toFixed(digits).replace('.', ',')}–${high.toFixed(digits).replace('.', ',')}`;
+
+/** A figure, then its range in small muted type (the matchups' uncertainty, see uncertainty()). */
+function withRange(node, bounds, digits = 1) {
+  const wrapper = el('span', { class: 'with-range' });
+  const note = el('span', { class: 'range' }, rangeText(bounds, digits));
+  note.title = `${Math.round(100 * prep.uncertaintyLevel)} % de chances d’être dans cette fourchette, vu le nombre de parties derrière les matchups`;
+  wrapper.append(node, note);
+  return wrapper;
+}
+
 /** Win-rate points (+0,85 / −1,20), coloured by their sign. */
 function pointsCell(points) {
   const text = `${points >= 0 ? '+' : '−'}${Math.abs(points).toFixed(2).replace('.', ',')}`;
@@ -254,8 +273,42 @@ function compute() {
     teamTop,
     winRates: fieldWinRates(field, teamSwiss),
     counterWinRates: field.map((_, i) => fieldWinRate(teamSwiss, countered, i)),
+    ...uncertainty(field, rates),
     signature,
   };
+}
+
+/** The range holding `uncertaintyLevel` of some draws, as [low, high]. */
+function range(values) {
+  const tail = (1 - prep.uncertaintyLevel) / 2;
+  return [quantile(values, tail), quantile(values, 1 - tail)];
+}
+
+/**
+ * How much the figures can move with the matchups' uncertainty: the matchups drawn again
+ * `uncertaintySamples` times from the games they rest on (same seed every time, so a figure
+ * doesn't flicker between redraws). Gives each deck's range of win rate against the field, and
+ * the first `uncertaintyBatches` draws as the simulation's batches.
+ */
+function uncertainty(field, rates) {
+  const rand = random(1);
+  const shares = field.map((d) => d.share);
+  const draws = field.map(() => []);
+  const batches = [];
+  for (let k = 0; k < prep.uncertaintySamples; k++) {
+    const sample = sampleRates(rates, rand);
+    const teamSwiss = matchMatrix(field, sample, prep.swissBestOf, state.edges);
+    field.forEach((_, i) => draws[i].push(fieldWinRate(teamSwiss, shares, i)));
+    if (k < prep.uncertaintyBatches) {
+      batches.push({
+        swiss: matchMatrix(field, sample, prep.swissBestOf),
+        top: matchMatrix(field, sample, prep.topCutBestOf),
+        teamSwiss,
+        teamTop: matchMatrix(field, sample, prep.topCutBestOf, state.edges),
+      });
+    }
+  }
+  return { winRanges: draws.map(range), batches };
 }
 
 /** The team's edge on a deck, in points of game win rate (0: an average player). */
@@ -269,7 +322,7 @@ function scheduleSimulation() {
 
 function runSimulation() {
   worker?.terminate();
-  const { field, swiss, top, teamSwiss, teamTop, signature } = current;
+  const { field, swiss, top, teamSwiss, teamTop, batches, signature } = current;
   worker = new Worker(new URL('./simulate.js', import.meta.url), { type: 'module' });
   const runs = prep.simulations;
   worker.onmessage = ({ data: message }) => {
@@ -290,6 +343,8 @@ function runSimulation() {
     top,
     teamSwiss,
     teamTop,
+    // Each batch of runs on its own draw of the matchups: the chances come with their range
+    batches,
     edged: field.map((d) => edgeOf(d) !== 0),
     format: { ...prep, players: state.players },
     runs,
@@ -299,11 +354,19 @@ function runSimulation() {
 
 /**
  * The simulation's figures per deck, when it was run on the current field: the team's players on
- * a deck with an edge, its average players otherwise. Day 2's field counts them all.
+ * a deck with an edge, its average players otherwise. Day 2's field counts them all. Each chance
+ * comes with its range over the batches (`…Range`), each on its own draw of the matchups.
  */
 function simulated() {
   if (simulation?.signature !== current.signature) return null;
-  const { counts, team, runs } = simulation;
+  const { counts, team, batches, runs } = simulation;
+  const spread = (i, deck, field) =>
+    range(
+      batches
+        .map((b) => (edgeOf(deck) ? b.team[i] : b.counts[i]))
+        .filter((c) => c.players)
+        .map((c) => (100 * c[field]) / c.players),
+    );
   const sum = (field) => [...counts, ...team].reduce((total, c) => total + c[field], 0);
   const day2 = sum('day2');
   const players = sum('players');
@@ -319,7 +382,9 @@ function simulated() {
       const c = edgeOf(deck) ? team[i] : counts[i];
       return {
         day2: (100 * c.day2) / c.players,
+        day2Range: spread(i, deck, 'day2'),
         top: (100 * c.top) / c.players,
+        topRange: spread(i, deck, 'top'),
         wins: (100 * c.wins) / c.players,
         day2Share: (100 * (counts[i].day2 + team[i].day2)) / day2,
         players: c.players,
@@ -387,7 +452,7 @@ function renderKpis() {
       kpi(
         `Meilleure chance de top ${prep.topCut}`,
         value,
-        `×${(best.top / sim.baseline.top).toFixed(1).replace('.', ',')} un joueur moyen (${formatPct(sim.baseline.top, 2)})`,
+        `${deckLabel(best.deck)}, entre ${rangeText(best.topRange, 2)} % ; ×${(best.top / sim.baseline.top).toFixed(1).replace('.', ',')} un joueur moyen (${formatPct(sim.baseline.top, 2)})`,
       ),
     );
   }
@@ -601,6 +666,7 @@ function decksCard() {
       deck,
       i,
       rate: current.winRates[i],
+      winRange: current.winRanges[i],
       countered: current.counterWinRates[i],
       sim: sim?.decks[i],
     }))
@@ -609,7 +675,7 @@ function decksCard() {
   const maxTop = sim ? Math.max(...sim.decks.map((d) => d.top)) : 1;
   const maxDay2 = sim ? Math.max(...sim.decks.map((d) => d.day2)) : 1;
 
-  const rows = order.map(({ deck, rate, countered, sim: s }) => {
+  const rows = order.map(({ deck, rate, winRange, countered, sim: s }) => {
     const worst = el('span', { class: 'deck-cell' });
     worst.append(winCell(100 * rate.worst.winRate), el('span', {}, 'si plus de'));
     const against = byKey.get(rate.worst.against);
@@ -624,11 +690,16 @@ function decksCard() {
         deckCell(deck),
         num(deck.key === OTHER ? '' : edgeInput(deck)),
         num(formatPct(deck.share)),
-        num(winCell(100 * rate.winRate)),
+        num(
+          withRange(
+            winCell(100 * rate.winRate),
+            winRange.map((v) => 100 * v),
+          ),
+        ),
         worst,
         num(winCell(100 * countered)),
-        num(s ? rateCell(s.day2, maxDay2) : '…'),
-        num(s ? rateCell(s.top, maxTop, 2) : '…'),
+        num(s ? withRange(rateCell(s.day2, maxDay2), s.day2Range) : '…'),
+        num(s ? withRange(rateCell(s.top, maxTop, 2), s.topRange, 2) : '…'),
         num(s ? formatPct(s.wins, 2) : '…'),
         num(s ? formatPct(s.day2Share) : '…'),
       ],
@@ -726,7 +797,7 @@ function decksCard() {
       el(
         'p',
         { class: 'card-note' },
-        `${formatInt(sim.runs)} tournois de ${formatInt(state.players)} joueurs simulés, ${formatInt(Math.round(sim.day2PerRun))} au J2 en moyenne. Les chances de victoire restent bruitées pour les decks rares.`,
+        `${formatInt(sim.runs)} tournois de ${formatInt(state.players)} joueurs simulés, ${formatInt(Math.round(sim.day2PerRun))} au J2 en moyenne. Sous chaque chiffre, sa fourchette à ${Math.round(100 * prep.uncertaintyLevel)} % : les matchups tirés à nouveau selon le nombre de parties qui les fondent (et le hasard de la simulation pour les chances). Deux decks dont les fourchettes se chevauchent largement ne se départagent pas avec ces données. Les chances de victoire restent bruitées pour les decks rares.`,
       ),
     );
   }
@@ -880,7 +951,73 @@ function sheetCard() {
     ),
   );
   figure.append(tableBody);
+  const mulligan = mulliganSection(deck);
+  if (mulligan) figure.append(mulligan);
   return figure;
+}
+
+/** Cards of the mulligan guide shown per list, at most. */
+const MULLIGAN_SHOWN = 6;
+
+/** One list of the mulligan guide: each card, how often it's kept, and the gap it makes. */
+function mulliganList(title, cards, empty) {
+  const section = el('div', { class: 'mulligan-list' });
+  section.append(el('h4', {}, title));
+  if (!cards.length) {
+    section.append(el('p', { class: 'card-note' }, empty));
+    return section;
+  }
+  const list = el('ul');
+  for (const c of cards.slice(0, MULLIGAN_SHOWN)) {
+    const item = el('li');
+    const gap = c.kept - c.tossed;
+    item.title = `Gardée : ${formatPct(c.kept)} de victoires · renvoyée : ${formatPct(c.tossed)} · vue dans ${formatInt(c.seen)} mains de départ`;
+    // The figures stay together on one line, the card's name wrapping instead
+    const figures = el(
+      'span',
+      { class: 'mulligan-figures' },
+      `gardée ${formatPct(c.keepRate, 0)} du temps · `,
+    );
+    figures.append(pointsCell(gap));
+    item.append(el('span', { class: 'mulligan-card' }, c.name), figures);
+    list.append(item);
+  }
+  section.append(list);
+  return section;
+}
+
+/**
+ * The deck's mulligan guide, on the play and on the draw, from its ladder opening hands
+ * (Legendary+): the cards whose keeping clearly wins more games, and those clearly better sent
+ * back. Printed with the sheet.
+ */
+function mulliganSection(deck) {
+  const guide = mulliganGuide(data.openings, deck.key);
+  if (!guide) return null;
+  const section = el('div', { class: 'card-body mulligan' });
+  section.append(
+    el('h3', { class: 'tier-title' }, 'Mulligan'),
+    el(
+      'p',
+      { class: 'card-note' },
+      'Win rate par partie quand la carte est gardée dans la main de départ, comparé à quand elle est renvoyée (ladder Legendary+, sur le set). Seuls les écarts nets sont listés. Une carte gardée dit aussi quelque chose du reste de la main : c’est un guide, pas la valeur de la carte. « Gardée x % du temps » : ce que font les joueurs ; un écart net sur une carte peu gardée, c’est une carte à garder plus souvent.',
+    ),
+  );
+  const columns = el('div', { class: 'mulligan-seats' });
+  for (const [seat, label] of [
+    ['play', 'En 1er'],
+    ['draw', 'En 2e'],
+  ]) {
+    const column = el('div', { class: 'mulligan-seat' });
+    column.append(
+      el('h4', { class: 'mulligan-seat-title' }, label),
+      mulliganList('À garder', guide[seat].keep, 'Aucune carte ne se détache.'),
+      mulliganList('À renvoyer', guide[seat].toss, 'Aucune carte ne se détache.'),
+    );
+    columns.append(column);
+  }
+  section.append(columns);
+  return section;
 }
 
 /** A gap in win rate (points), coloured only when its interval excludes 0. */
@@ -954,15 +1091,16 @@ function contentCard() {
     return figure;
   }
   const cut = lists.filter((l) => l.topCut).length;
+  const variants = variantSummary(lists);
   const note = el(
     'p',
     { class: 'card-note' },
-    `${formatInt(lists.length)} listes, dont ${formatInt(cut)} du top cut.`,
+    `${formatInt(lists.length)} listes, dont ${formatInt(cut)} du top cut.${variants ? ` Variantes de ce deck : ${variants}.` : ''}`,
   );
-  // The tournaments page tells builds apart its own way: its median list is by inks
-  if (view() === VIEWS.colors) {
+  // The tournaments page knows the same decks: its median list of this one
+  if (!isRest(deck.key)) {
     const median = el('a', {
-      href: `../tournaments/?cards=colors&deck=${encodeURIComponent(deck.key)}`,
+      href: `../tournaments/?cards=${view()}&deck=${encodeURIComponent(deck.key)}`,
     });
     median.textContent = 'sa liste médiane du top cut';
     note.append(' Voir aussi ', median, '.');
@@ -1012,21 +1150,25 @@ function contentCard() {
 
 async function loadLadder() {
   const index = await fetchJson(`${DATA_URL}${LADDER_QUEUE}/index.json`);
-  const weeks = await Promise.all(
+  const fetched = await Promise.all(
     index.weeks.map((w) => fetchJson(`${DATA_URL}${LADDER_QUEUE}/weeks/${w.startDate}.json`)),
   );
+  // The archetypes' average lists: without them, decks are by inks only
+  const stored = await fetchJson(`${DATA_URL}${LADDER_QUEUE}/profiles.json`).catch(() => null);
+  // Archetypes by what they play: their ids, slugs and names change from one collection to the next
+  const { weeks, profiles } = reconcileArchetypes(fetched, stored?.profiles ?? []);
   weeks.sort((a, b) => a.week.startDate.localeCompare(b.week.startDate));
   const finished = weeks.filter((w) => isWeekComplete(w.week));
   // Play rates: the last finished weeks (the week in progress when none is over yet)
   const recentWeeks = (finished.length ? finished : weeks).slice(-prep.ladderWeeks);
-  // The archetypes' average lists: without them, decks are by inks only
-  const profiles = await fetchJson(`${DATA_URL}${LADDER_QUEUE}/profiles.json`).catch(() => null);
   return {
     index,
     weeks,
     recentWeeks,
-    profiles: profiles?.profiles ?? [],
-    pairLift: profiles?.pairLift ?? {},
+    profiles,
+    pairLift: stored?.pairLift ?? {},
+    // Opening hands per archetype, already keyed by slug
+    openings: stored?.openings ?? {},
   };
 }
 

@@ -1,17 +1,18 @@
 /**
- * Lorcanahunter tournaments: the top-cut rule, the players' lists and their sub-archetypes, the
+ * Lorcanahunter tournaments: the top-cut rule, the players' lists and their archetypes, the
  * starting field and its conversion to the top cut, and the top-cut decklists card by card.
  * Shared by the collector and the page.
  */
 import { config } from '../config.js';
+import { archetypeDecks, listArchetype, restKey } from './archetypes.js';
 import { deckKey, deckName } from './inks.js';
 import { wilson } from './metrics.js';
 
 /**
- * Charts by ink pair, by Lorcanahunter's archetype (as on the meta page), or by sub-archetype: the
- * builds told apart by their lists (see assignSubArchetypes).
+ * Charts by ink pair, or by the ladder's archetype as on every page: a player's archetype is
+ * known from their public list only (see assignArchetypes).
  */
-export const VIEWS = { colors: 'colors', archetypes: 'archetypes', subArchetypes: 'subarchetypes' };
+export const VIEWS = { colors: 'colors', archetypes: 'archetypes' };
 
 /** Largest power of 2 up to `players / ratio`, at least 2. */
 export function assumedCutSize(players, ratio = config.tournaments.assumedCutRatio) {
@@ -93,8 +94,8 @@ const unpacked = new WeakMap();
 
 /**
  * Every public list of a tournament, unpacked: { standing, topCut, wins, losses, deck, cards,
- * event }, cards as { name, quantity, cost, inkwell }. The deck is the player's own object, so a
- * sub-archetype set on it shows in every report.
+ * event }, cards as { name, quantity, cost, inkwell }. The deck is the player's own object, so an
+ * archetype set on it shows in every report.
  */
 export function eventLists(event) {
   if (!unpacked.has(event)) {
@@ -120,17 +121,13 @@ export function eventLists(event) {
 export const eventsSince = (events, from) => events.filter((e) => e.date && e.date >= from);
 
 /**
- * Grouping key of a deck in a view; null when it has none (an archetype not recognised, or no
- * public list to tell its sub-archetype).
+ * Grouping key of a deck in a view; null when it has none (by archetype, no
+ * public list to tell its archetype).
  */
 function groupOf(deck, view) {
   if (!deck) return null;
   if (view === VIEWS.colors) return { key: deckKey(deck.colors), colors: deck.colors };
-  if (view === VIEWS.subArchetypes) {
-    return deck.sub ? { key: deck.sub.key, colors: deck.colors, label: deck.sub.label } : null;
-  }
-  if (!deck.archetype) return null;
-  return { key: `a${deck.archetype.id}`, colors: deck.colors, label: deck.archetype.name };
+  return deck.sub ? { key: deck.sub.key, colors: deck.colors, label: deck.sub.label } : null;
 }
 
 /** The inks seen most often among an archetype's decks (a few are entered with other inks). */
@@ -141,7 +138,7 @@ function mostFrequent(counts) {
 /**
  * The starting field and the top cut, per deck: share of the players, of the top cut, and the
  * conversion rate (share of the deck's players who made the cut) with its 95% interval. The
- * players whose deck is unknown (by archetype, not recognised; by sub-archetype, without a public
+ * players whose deck is unknown (by archetype, without a public list to tell it; by inks, private
  * list) are left out of every share, and `coverage` says how many are kept.
  */
 export function fieldReport(events, view = VIEWS.colors) {
@@ -400,101 +397,22 @@ function sharedCards(a, b) {
 const shortName = (card) => card.split(' - ')[0];
 
 /**
- * The builds among one deck's lists: average-linkage clustering, merging the two closest groups
- * while their lists share at least `minShared` cards on average. Each build is named after its
- * signature cards: in (nearly) all its lists, and the rarest in every other list.
+ * Gives every public list of the period its ladder archetype, the one whose average list it is
+ * closest to (see listArchetype), and sets it on the list's deck (`deck.sub`: key, label,
+ * signature): the same archetypes as the ladder's pages, by the same rule as the preparation
+ * page. A list close to none goes to its ink pair's "Autres listes". Every report by archetype
+ * then reads it. Run once, on the events shown.
  *
- * @param {object[]} lists the deck's lists
- * @param {object[]} others every other list of the period, to find what sets a build apart
- * @returns {{ key: string, label: string, signature: string[], lists: object[] }[]} largest first
+ * @param {object[]} profiles keyedProfiles() of the ladder's BO1 queue
  */
-export function subArchetypes(
-  lists,
-  others,
-  groupKey,
-  minShared = config.tournaments.subArchetypeShared,
-) {
-  const counts = (list) => new Map(list.cards.map((c) => [c.name, c.quantity]));
-  const decks = lists.map(counts);
-  // sums[i][j]: cards shared, summed over every pair of lists across clusters i and j
-  let clusters = lists.map((_, i) => [i]);
-  let sums = decks.map((a) => decks.map((b) => sharedCards(a, b)));
-  for (;;) {
-    let best = null;
-    for (let i = 0; i < clusters.length; i++) {
-      for (let j = i + 1; j < clusters.length; j++) {
-        const mean = sums[i][j] / (clusters[i].length * clusters[j].length);
-        if (!best || mean > best.mean) best = { i, j, mean };
-      }
-    }
-    if (!best || best.mean < minShared) break;
-    const { i, j } = best;
-    clusters[i] = [...clusters[i], ...clusters[j]];
-    for (let k = 0; k < clusters.length; k++) sums[i][k] = sums[k][i] = sums[i][k] + sums[j][k];
-    clusters = clusters.filter((_, k) => k !== j);
-    sums = sums.filter((_, k) => k !== j).map((row) => row.filter((_, k) => k !== j));
-  }
-
-  const otherDecks = others.map(counts);
-  return clusters
-    .map((members) => {
-      const inside = members.map((i) => decks[i]);
-      const outside = [...otherDecks, ...decks.filter((_, i) => !members.includes(i))];
-      const share = (ds, name) =>
-        ds.length ? ds.filter((d) => d.has(name)).length / ds.length : 0;
-      const names = [...new Set(inside.flatMap((d) => [...d.keys()]))];
-      const ranked = names
-        .map((name) => ({
-          name,
-          inside: share(inside, name),
-          outside: share(outside, name),
-          copies: inside.reduce((n, d) => n + (d.get(name) ?? 0), 0) / inside.length,
-        }))
-        .filter((c) => c.inside >= 0.75)
-        .sort((a, b) => b.inside - b.outside - (a.inside - a.outside) || b.copies - a.copies);
-      // Two cards, by their character's name, not twice the same character
-      const signature = [];
-      for (const c of ranked) {
-        if (!signature.some((s) => shortName(s) === shortName(c.name))) signature.push(c.name);
-        if (signature.length === 2) break;
-      }
-      const label = signature.map(shortName).join(' · ') || 'Sans signature';
-      return { label, signature, lists: members.map((i) => lists[i]) };
-    })
-    .sort((a, b) => b.lists.length - a.lists.length)
-    .map((sub, i, subs) => {
-      // Two builds can share their signature's characters: the smaller one gets a number
-      const twin = subs.slice(0, i).filter((s) => s.label === sub.label).length;
-      const slug = sub.label.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-      return { ...sub, key: `${groupKey}~${slug}${twin ? `-${twin + 1}` : ''}` };
-    });
-}
-
-/**
- * Sorts every public list of the period into sub-archetypes, ink pair by ink pair, and sets each
- * list's build on its deck (`deck.sub`: key, label, signature, lists in the build). Every report
- * by sub-archetype then reads it. Run once, on the events shown.
- */
-export function assignSubArchetypes(events) {
-  const all = events.flatMap(eventLists);
-  const byInks = new Map();
-  for (const list of all) {
-    const key = deckKey(list.deck.colors);
-    if (!byInks.has(key)) byInks.set(key, []);
-    byInks.get(key).push(list);
-  }
-  for (const [key, lists] of byInks) {
-    const own = new Set(lists);
-    const others = all.filter((l) => !own.has(l));
-    for (const sub of subArchetypes(lists, others, key)) {
-      const info = {
-        key: sub.key,
-        label: sub.label,
-        signature: sub.signature,
-        lists: sub.lists.length,
-      };
-      for (const list of sub.lists) list.deck.sub = info;
-    }
+export function assignArchetypes(events, profiles) {
+  const decks = archetypeDecks(profiles);
+  for (const list of events.flatMap(eventLists)) {
+    const key = listArchetype(list, profiles);
+    const deck = key ? decks.get(key) : null;
+    list.deck.sub = deck
+      ? { key, label: deck.label, signature: deck.signature.slice(0, 2).map(shortName) }
+      : { key: restKey([...list.deck.colors].sort()), label: 'Autres listes', signature: [] };
   }
 }
 

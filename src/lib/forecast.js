@@ -10,42 +10,23 @@
  * simulation worker.
  */
 import { config } from '../config.js';
+import {
+  archetypeNames,
+  isRest,
+  keyedProfiles,
+  listArchetype,
+  reconcileArchetypes,
+  restInks,
+  restKey,
+} from './archetypes.js';
 import { deckKey, nameArchetypes } from './inks.js';
 import { aggregate, differenceCI, firstPlayerWinRate, matchupFor } from './metrics.js';
 import { VIEWS, eventLists, fieldReport } from './tournaments.js';
 
-export { VIEWS };
+export { VIEWS, isRest, keyedProfiles, listArchetype, reconcileArchetypes, restKey };
 
 /** The decks below `minShare`, summed: plays 50 % against everyone. */
 export const OTHER = 'other';
-
-/** By archetype, an ink pair's decks no archetype recognises: `rest:amber/emerald`. */
-const REST = 'rest:';
-export const restKey = (colors) => `${REST}${deckKey(colors)}`;
-export const isRest = (key) => key.startsWith(REST);
-
-/**
- * The ladder archetype of a tournament decklist: the one whose average list (of one of its
- * profiles, same inks) shares the most cards with it, copies counted, if at least `minShared`.
- * Null otherwise. Cached on the list.
- */
-const archetypeCache = new WeakMap();
-export function listArchetype(list, profiles, minShared = config.prep.minSharedCards) {
-  if (archetypeCache.has(list)) return archetypeCache.get(list);
-  const copies = new Map();
-  for (const c of list.cards) copies.set(c.name, (copies.get(c.name) ?? 0) + c.quantity);
-  const inks = deckKey([...list.deck.colors].sort());
-  let best = null;
-  for (const p of profiles) {
-    if (deckKey(p.colors) !== inks) continue;
-    let shared = 0;
-    for (const [name, n] of p.cards) shared += Math.min(n, copies.get(name) ?? 0);
-    if (!best || shared > best.shared) best = { shared, id: p.archetypeId };
-  }
-  const id = best && best.shared >= minShared ? best.id : null;
-  archetypeCache.set(list, id);
-  return id;
-}
 
 /** A decklist's deck key in a view: its inks, its archetype, or its ink pair's rest. */
 export function listKey(list, view, profiles) {
@@ -63,15 +44,23 @@ export function listKey(list, view, profiles) {
  *
  * @param {object} [options] { view, priorGames }
  * @returns {{ firstPlayer: number, rate: (a: string, b: string) => object }} rates as fractions;
- *   rate(a, b) = { onPlay, onDraw, games, raw, inks } from a's side, raw = observed win rate or
- *   null, inks = true when the figures are the ink pairs' (no archetype matchup to tell apart)
+ *   rate(a, b) = { onPlay, onDraw, games, raw, inks, weight } from a's side, raw = observed win
+ *   rate or null, inks = true when the figures are the ink pairs' (no archetype matchup to tell
+ *   apart), weight = { play, draw }: the games behind each rate, prior included (see sampleRates)
  */
 export function gameRates(snapshots, options = {}) {
   const { view = VIEWS.colors, priorGames = config.prep.priorGames } = options;
   const agg = aggregate(snapshots, VIEWS.colors);
   const firstPlayer = (firstPlayerWinRate(agg) ?? 50) / 100;
   const shrink = (wins, games, prior) => (wins + prior * priorGames) / (games + priorGames);
-  const even = { onPlay: firstPlayer, onDraw: 1 - firstPlayer, games: 0, raw: null };
+  // `weight`: the games behind each rate, prior included: how far a sample may stray from it
+  const even = {
+    onPlay: firstPlayer,
+    onDraw: 1 - firstPlayer,
+    games: 0,
+    raw: null,
+    weight: { play: priorGames, draw: priorGames },
+  };
 
   const inkCache = new Map();
   const inkRate = (a, b) => {
@@ -84,6 +73,7 @@ export function gameRates(snapshots, options = {}) {
           onDraw: shrink(m.onDraw.wins, m.onDraw.games, 1 - firstPlayer),
           games: m.games,
           raw: m.games ? m.wins / m.games : null,
+          weight: { play: m.onPlay.games + priorGames, draw: m.onDraw.games + priorGames },
         }
       : even;
     inkCache.set(id, result);
@@ -101,7 +91,7 @@ export function gameRates(snapshots, options = {}) {
     key === OTHER
       ? null
       : isRest(key)
-        ? key.slice(REST.length)
+        ? restInks(key)
         : colors.has(key)
           ? deckKey(colors.get(key))
           : null;
@@ -118,7 +108,7 @@ export function gameRates(snapshots, options = {}) {
           : matchupFor(archetypes, a, b);
       const result =
         a === b
-          ? { ...even, inks: false }
+          ? { ...even, inks: false, weight: { play: Infinity, draw: Infinity } }
           : m
             ? {
                 onPlay: (m.onPlay.wins + prior.onPlay * priorGames) / (m.onPlay.games + priorGames),
@@ -126,6 +116,7 @@ export function gameRates(snapshots, options = {}) {
                 games: m.games,
                 raw: m.games ? m.wins / m.games : null,
                 inks: false,
+                weight: { play: m.onPlay.games + priorGames, draw: m.onDraw.games + priorGames },
               }
             : prior;
       cache.set(id, result);
@@ -238,7 +229,8 @@ export function forecastField(events, ladderSnapshots, options = {}) {
   } else {
     // Ladder: each archetype, then what's left of its ink pair
     const archetypes = aggregate(ladderSnapshots, VIEWS.archetypes);
-    const named = new Map(profiles.map((p) => [p.archetypeId, p]));
+    // Today's name of each archetype, the same as on every page
+    const named = archetypeNames(profiles);
     const ladderSplit = new Map();
     for (const pair of agg.decks.values()) {
       ladderSplit.set(pair.key, new Map([[restKey(pair.colors), pair.games]]));
@@ -250,8 +242,9 @@ export function forecastField(events, ladderSnapshots, options = {}) {
       split.set(restKey(a.colors), Math.max(0, split.get(restKey(a.colors)) - a.games));
       ladderSplit.set(inks, split);
       Object.assign(entry(a.key, a.colors), {
-        archetype: a.archetype ?? named.get(a.key)?.name ?? null,
-        slug: a.slug ?? named.get(a.key)?.slug ?? null,
+        // duels.ink renames archetypes too: the profiles hold the latest name
+        archetype: named.get(a.key)?.name ?? a.archetype ?? null,
+        slug: named.get(a.key)?.slug ?? a.slug ?? null,
       });
     }
     for (const [inks, split] of ladderSplit) {
@@ -424,6 +417,73 @@ export function random(seed) {
   };
 }
 
+/** A standard normal draw (Box–Muller). */
+function normal(rand) {
+  return Math.sqrt(-2 * Math.log(1 - rand())) * Math.cos(2 * Math.PI * rand());
+}
+
+/** A Gamma(shape, 1) draw (Marsaglia–Tsang; shape < 1 boosted). */
+function gamma(shape, rand) {
+  if (shape < 1) return gamma(shape + 1, rand) * rand() ** (1 / shape);
+  const d = shape - 1 / 3;
+  const c = 1 / Math.sqrt(9 * d);
+  for (;;) {
+    let x;
+    let v;
+    do {
+      x = normal(rand);
+      v = 1 + c * x;
+    } while (v <= 0);
+    v = v ** 3;
+    const u = rand();
+    if (Math.log(u) < 0.5 * x * x + d - d * v + d * Math.log(v)) return d * v;
+  }
+}
+
+/** A Beta draw around `mean`, as spread as `weight` games allow; the mean itself if infinite. */
+function beta(mean, weight, rand) {
+  if (!Number.isFinite(weight)) return mean;
+  const a = gamma(mean * weight, rand);
+  return a / (a + gamma((1 - mean) * weight, rand));
+}
+
+/**
+ * The matchups as they might be, given the games they rest on: each game win rate drawn from its
+ * Beta distribution (`weight` games, prior included), once per pair of decks, its reverse taken
+ * as its complement. Drawing again and again gives how much every figure built on them can move.
+ * The ink pairs' rates an archetype matchup is pulled toward are taken as known.
+ */
+export function sampleRates(rates, rand) {
+  const cache = new Map();
+  return {
+    firstPlayer: rates.firstPlayer,
+    rate(a, b) {
+      if (a === b) return rates.rate(a, b);
+      const [x, y] = a < b ? [a, b] : [b, a];
+      const id = `${x}|${y}`;
+      if (!cache.has(id)) {
+        const r = rates.rate(x, y);
+        cache.set(id, {
+          onPlay: beta(r.onPlay, r.weight.play, rand),
+          onDraw: beta(r.onDraw, r.weight.draw, rand),
+        });
+      }
+      const s = cache.get(id);
+      // Seen from the other side: its games on the play are this side's on the draw
+      return a === x ? s : { onPlay: 1 - s.onDraw, onDraw: 1 - s.onPlay };
+    },
+  };
+}
+
+/** The `p` quantile (0 to 1) of some numbers, linearly interpolated. */
+export function quantile(values, p) {
+  const sorted = [...values].sort((x, y) => x - y);
+  if (!sorted.length) return NaN;
+  const at = p * (sorted.length - 1);
+  const low = Math.floor(at);
+  return sorted[low] + (sorted[Math.min(low + 1, sorted.length - 1)] - sorted[low]) * (at - low);
+}
+
 /**
  * Chance that player `a` beats player `b` from the average players' matrix and the team's (our
  * players, with their edge on their deck). Two team players meet as average ones: rare, and their
@@ -487,16 +547,23 @@ const emptyCounts = () => ({
  * with it, from the team matrices, and are counted apart. Every deck gets at least one player per
  * run, so the rarest still get measured.
  *
+ * With `batches` (matrix sets drawn from sampleRates), the runs are split between them, each
+ * batch counted apart too: how much the results move from one plausible set of matchups to
+ * another (plus the simulation's own chance).
+ *
  * @param {object} input { shares (%, field order), swiss, top (match matrices), teamSwiss,
- *   teamTop (the same with the team's edges), edged (per deck: has an edge), format: the prep
- *   settings (players, rounds, points…), runs, seed }
+ *   teamTop (the same with the team's edges), batches ([{ swiss, top, teamSwiss, teamTop }], in
+ *   place of the four), edged (per deck: has an edge), format: the prep settings (players,
+ *   rounds, points…), runs, seed }
  * @param {(done: number) => void} [progress] called every few runs
- * @returns {{ counts: object[], team: object[] }} per deck, the average players' and the team's:
- *   { players, day2, top, wins, matchWins, matchLosses, matchDraws }
+ * @returns {{ counts: object[], team: object[], batches: object[] }} per deck, the average
+ *   players' and the team's: { players, day2, top, wins, matchWins, matchLosses, matchDraws };
+ *   and the same per batch ({ counts, team })
  */
 export function simulate(input, progress) {
   const { shares, swiss, top, format, runs, seed = 1 } = input;
   const { teamSwiss = swiss, teamTop = top, edged = [] } = input;
+  const sets = input.batches ?? [{ swiss, top, teamSwiss, teamTop }];
   const { players: size, day1Rounds, day2Points, day2Rounds, topCut, drawRate } = format;
   const teamShare = format.teamShare ?? config.prep.teamShare;
   const rand = random(seed);
@@ -506,10 +573,16 @@ export function simulate(input, progress) {
   shares.reduce((sum, s, i) => (cumulative[i] = sum + s / total), 0);
   const counts = shares.map(emptyCounts);
   const team = shares.map(emptyCounts);
-  const swissBeats = chance(swiss, teamSwiss);
-  const topBeats = chance(top, teamTop);
+  const batches = sets.map(() => ({
+    counts: shares.map(emptyCounts),
+    team: shares.map(emptyCounts),
+  }));
 
   for (let run = 0; run < runs; run++) {
+    const batch = Math.floor((run * sets.length) / runs);
+    const set = sets[batch];
+    const swissBeats = chance(set.swiss, set.teamSwiss);
+    const topBeats = chance(set.top, set.teamTop);
     const players = Array.from({ length: size }, () => {
       const r = rand();
       let deck = cumulative.findIndex((c) => r < c);
@@ -550,20 +623,25 @@ export function simulate(input, progress) {
       bracket = next;
     }
 
-    const of = (p) => (p.team ? team : counts)[p.deck];
+    // Every count goes to the totals and to the run's batch
+    const of = (p) => [
+      (p.team ? team : counts)[p.deck],
+      (p.team ? batches[batch].team : batches[batch].counts)[p.deck],
+    ];
     for (const p of players) {
-      const c = of(p);
-      c.players++;
-      c.matchWins += p.wins;
-      c.matchLosses += p.losses;
-      c.matchDraws += p.draws;
+      for (const c of of(p)) {
+        c.players++;
+        c.matchWins += p.wins;
+        c.matchLosses += p.losses;
+        c.matchDraws += p.draws;
+      }
     }
-    for (const p of day2) of(p).day2++;
-    for (const p of cut) of(p).top++;
-    if (bracket.length) of(bracket[0]).wins++;
+    for (const p of day2) for (const c of of(p)) c.day2++;
+    for (const p of cut) for (const c of of(p)) c.top++;
+    if (bracket.length) for (const c of of(bracket[0])) c.wins++;
     if (progress && (run + 1) % 10 === 0) progress(run + 1);
   }
-  return { counts, team };
+  return { counts, team, batches };
 }
 
 /** Standard bracket order of `size` seeds (a power of 2), as indexes: 8 → 0 7 3 4 1 6 2 5. */
@@ -678,3 +756,46 @@ export const ladderCards = (pairLift, colors) =>
   [...(pairLift?.[deckKey(colors)] ?? [])].sort(
     (a, b) => (b.lift > 0) - (a.lift > 0) || Math.abs(b.lift) - Math.abs(a.lift),
   );
+
+/** Below this many hands kept (or sent back) with a card, the two aren't compared. */
+const MIN_MULLIGAN_HANDS = 30;
+
+/**
+ * The mulligan guide of an archetype, per seat, from its ladder opening hands (`openings` in
+ * profiles.json, by slug): for each card, how often it's in the opening hand, how often players
+ * keep it, and the game win rate when kept and when sent back, with the 99 % interval of the gap
+ * (every card of the deck is tested at once). `keep`: cards whose keeping clearly wins more,
+ * `toss`: clearly less. A kept card also tells of the rest of the hand (one sends a card back from
+ * a hand that needs it gone), so the gap is a guide, not the card's own worth.
+ *
+ * @returns {{ play: object, draw: object } | null} per seat: { cards, keep, toss }, biggest gaps
+ *   first; null without opening hands for the archetype
+ */
+export function mulliganGuide(openings, key) {
+  const seats = openings?.[key];
+  if (!seats) return null;
+  const guide = {};
+  for (const seat of ['play', 'draw']) {
+    const cards = (seats[seat] ?? []).map(
+      ([name, seen, seenWon, kept, keptWon, tossed, tossedWon]) => {
+        const compared = kept >= MIN_MULLIGAN_HANDS && tossed >= MIN_MULLIGAN_HANDS;
+        return {
+          name,
+          seen,
+          winRate: seen ? (100 * seenWon) / seen : null,
+          keepRate: seen ? (100 * kept) / seen : null,
+          kept: compared ? (100 * keptWon) / kept : null,
+          tossed: compared ? (100 * tossedWon) / tossed : null,
+          gap: compared ? differenceCI(keptWon, kept, tossedWon, tossed, 2.58) : null,
+        };
+      },
+    );
+    const byGap = (a, b) => b.kept - b.tossed - (a.kept - a.tossed);
+    guide[seat] = {
+      cards,
+      keep: cards.filter((c) => c.gap?.[0] > 0).sort(byGap),
+      toss: cards.filter((c) => c.gap?.[1] < 0).sort((a, b) => byGap(b, a)),
+    };
+  }
+  return guide;
+}

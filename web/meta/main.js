@@ -16,6 +16,7 @@ import {
   formatUpdatedAt,
   formatWeekRange,
 } from '../../src/lib/format.js';
+import { reconcileArchetypes } from '../../src/lib/archetypes.js';
 import { INKS, deckEmoji, deckName } from '../../src/lib/inks.js';
 import {
   VIEWS,
@@ -73,9 +74,16 @@ function loadQueue(queue) {
       (async () => {
         const index = await loadIndex(queue);
         if (!index) throw new Error(`No data for ${queue}`);
-        const snapshots = await Promise.all(
-          index.weeks.map((w) => fetchJson(`${DATA_URL}${queue}/weeks/${w.startDate}.json`)),
-        );
+        const [fetched, stored] = await Promise.all([
+          Promise.all(
+            index.weeks.map((w) => fetchJson(`${DATA_URL}${queue}/weeks/${w.startDate}.json`)),
+          ),
+          // Today's archetypes; without them, the weeks are still matched to one another
+          fetchJson(`${DATA_URL}${queue}/profiles.json`).catch(() => null),
+        ]);
+        // One archetype under one key and today's name in every week, whatever ids and names
+        // duels.ink gave it when each week was collected
+        const { weeks: snapshots } = reconcileArchetypes(fetched, stored?.profiles ?? []);
         return { index, snapshots };
       })(),
     );

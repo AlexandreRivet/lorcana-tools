@@ -17,9 +17,10 @@ import {
   formatWeekRange,
 } from '../../src/lib/format.js';
 import { INKS, deckEmoji, deckName } from '../../src/lib/inks.js';
+import { keyedProfiles, variantSummary } from '../../src/lib/archetypes.js';
 import {
   VIEWS,
-  assignSubArchetypes,
+  assignArchetypes,
   assumedCutSize,
   bracketReport,
   cardReport,
@@ -49,20 +50,22 @@ const DEFAULT_VIEWS = {
   cards: VIEWS.archetypes,
 };
 
-// The views each card offers: the card analysis splits its decks into sub-archetypes itself
-const ALL_VIEWS = [VIEWS.colors, VIEWS.archetypes, VIEWS.subArchetypes];
+// The views each card offers: by inks, the card analysis lists each pair's archetypes itself
+const ALL_VIEWS = [VIEWS.colors, VIEWS.archetypes];
 const CARD_VIEWS = {
   field: ALL_VIEWS,
   conversion: ALL_VIEWS,
   rounds: ALL_VIEWS,
-  cards: [VIEWS.colors, VIEWS.archetypes],
+  cards: ALL_VIEWS,
 };
 
 const VIEW_LABELS = {
   [VIEWS.colors]: 'Encres',
   [VIEWS.archetypes]: 'Archétypes',
-  [VIEWS.subArchetypes]: 'Sous-archétypes',
 };
+
+// The ladder queue whose archetypes the lists are sorted into, as on the other pages
+const LADDER_QUEUE = config.queues.find((q) => q.includes('bo1'));
 
 const state = readUrlState();
 let data = null;
@@ -327,18 +330,16 @@ function refresh(id, focusSelector) {
 
 /** What each view keeps of the known decks, for the switch's note. */
 const VIEW_NOTES = {
-  [VIEWS.archetypes]: (share) =>
-    `${share} des decks connus rattachés à un archétype par Lorcanahunter ; les autres sont laissés de côté dans cette vue`,
-  [VIEWS.subArchetypes]: (share) => {
+  [VIEWS.archetypes]: (share) => {
     const left = data.events.filter((e) => !data.listedEvents.includes(e));
     const out = left.length
       ? ` Hors de cette vue, faute de listes publiques pour ${listRule()} : ${left.map((e) => e.name).join(', ')}.`
       : '';
-    return `${share} des decks connus ont une liste publique, rangée en sous-archétype ; les autres sont laissés de côté dans cette vue.${out}`;
+    return `${share} des decks connus ont une liste publique, rangée dans l’archétype du ladder dont la liste moyenne lui ressemble le plus (comme sur les autres pages) ; les autres sont laissés de côté dans cette vue.${out}`;
   },
 };
 
-/** The inks / archetypes / sub-archetypes switch of a card; switching redraws only that card. */
+/** The inks / archetypes switch of a card; switching redraws only that card. */
 function viewSwitch(id) {
   const view = state.views[id];
   const group = el('div', { class: 'view-switch', role: 'group', 'aria-label': 'Vue' });
@@ -371,8 +372,8 @@ function viewSwitch(id) {
   return controls;
 }
 
-/** The tournaments a view counts: by sub-archetype, those with enough public lists. */
-const eventsFor = (view) => (view === VIEWS.subArchetypes ? data.listedEvents : data.events);
+/** The tournaments a view counts: by archetype, those with enough public lists. */
+const eventsFor = (view) => (view === VIEWS.archetypes ? data.listedEvents : data.events);
 
 const context = () => ({
   period: formatWeekRange(data.index.window.from, data.index.window.to),
@@ -385,15 +386,15 @@ const listRule = () =>
   `${formatPct(100 * config.tournaments.minListShare, 0)} de ses joueurs hors top cut`;
 
 /**
- * A card's stand-in by sub-archetype when no tournament has enough public lists, or null. A
+ * A card's stand-in by archetype when no tournament has enough public lists, or null. A
  * tournament publishing only its top cut's lists would show nearly every listed player in it.
  */
 function noListsCard(id, title, controls) {
-  if (state.views[id] !== VIEWS.subArchetypes || data.listedEvents.length) return null;
+  if (state.views[id] !== VIEWS.archetypes || data.listedEvents.length) return null;
   return emptyCard({
     id,
     title,
-    reason: `Pas assez de listes publiques : par sous-archétype, un tournoi ne compte que si au moins ${listRule()} ont publié leur liste, et aucun ne le fait sur la période.`,
+    reason: `Pas assez de listes publiques : par archétype, un tournoi ne compte que si au moins ${listRule()} ont publié leur liste, et aucun ne le fait sur la période.`,
     controls,
   });
 }
@@ -601,7 +602,8 @@ function cardsCard() {
     const name = g.label ?? deckName(g.colors);
     // Options are text only: the inks as coloured-circle emoji, then the names
     if (subs.length < 2) {
-      const label = subs[0]?.label;
+      // By archetype, the deck is its one build: its name once
+      const label = subs[0]?.label === name ? null : subs[0]?.label;
       choices.push({ key: g.key, group: g, lists, sub: null, subs });
       select.append(
         el(
@@ -667,7 +669,7 @@ function cardsCard() {
       el(
         'p',
         { class: 'card-note' },
-        `Sous-archétype : ${listCount(sub.lists.length)} sur ${total}, reconnu à ${sub.signature.join(' et ')}.`,
+        `Archétype : ${listCount(sub.lists.length)} sur ${total}${sub.signature.length ? `, reconnu à ${sub.signature.join(' et ')}` : ', proches d’aucun archétype du ladder'}.`,
       ),
     );
   } else if (subs.length > 1) {
@@ -675,9 +677,14 @@ function cardsCard() {
       el(
         'p',
         { class: 'card-note' },
-        `${subs.length} sous-archétypes mélangés ici : ${subs.map((s) => `${s.label} (${s.lists.length})`).join(', ')}. Les choisir dans la liste donne des cartes plus nettes.`,
+        `${subs.length} archétypes mélangés ici : ${subs.map((s) => `${s.label} (${s.lists.length})`).join(', ')}. Les choisir dans la liste donne des cartes plus nettes.`,
       ),
     );
+  }
+  // An archetype merged from near twins: how its lists split between them
+  const variants = view === VIEWS.archetypes || sub ? variantSummary(lists) : null;
+  if (variants) {
+    body.append(el('p', { class: 'card-note' }, `Variantes de ce deck : ${variants}.`));
   }
   if (report.lists < 2) {
     body.append(
@@ -819,9 +826,11 @@ async function load() {
   }
   const listed = eventsSince(index.tournaments, index.window.from);
   const events = await Promise.all(listed.map((t) => fetchJson(`${DATA_URL}events/${t.id}.json`)));
-  // Every public list of the period into its build, once: every view by sub-archetype reads it
-  assignSubArchetypes(events);
-  // By sub-archetype, only the tournaments whose field outside the top cut is mostly listed: the
+  // Every public list of the period into its ladder archetype, once: every view by archetype
+  // reads it. Without the archetypes' average lists, each list goes to its inks' "Autres listes"
+  const stored = await fetchJson(`../${LADDER_QUEUE}/profiles.json`).catch(() => null);
+  assignArchetypes(events, keyedProfiles(stored?.profiles ?? []));
+  // By archetype, only the tournaments whose field outside the top cut is mostly listed: the
   // top cut's lists are all public, so a thin sample of the others would inflate every conversion
   const { minListShare } = config.tournaments;
   const listedEvents = events.filter((e) => {

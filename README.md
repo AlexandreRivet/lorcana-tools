@@ -95,6 +95,44 @@ keeps that set's name.
 In BO3 queues the API counts decks and matchups in **matches** (and `activity.totalGames` in
 single games): win rates are match win rates, and every count is shown as "matchs".
 
+### Archetypes
+
+Every page (meta, digest and podcast, tournaments, preparation) knows the same archetypes, the
+ladder's, told apart by what they play rather than by their ids or names
+([src/lib/archetypes.js](src/lib/archetypes.js)). duels.ink gives an archetype a new id whenever it
+clusters the lists again, and a new slug and name when it picks other key cards (Detectives went
+from `higgins-mickey` to `judy-darkwing`), so weeks collected on different days know one archetype
+under several.
+
+- `npm run collect` stores each week's archetypes with their average list (`cards`: average copies
+  per card, by name; weeks stored before are fetched once more), and `data/<queue>/profiles.json`,
+  today's archetypes over the set: each profile's average list and signature cards (the API's
+  `profiles`, outside its stable contract like the archetypes). Card names come from the
+  [Lorcast API](https://lorcast.com/docs/api), kept in `data/cards.json` and fetched again only for
+  a set not seen yet.
+- `reconcileArchetypes` matches each week's archetypes to today's (keyed by their slug), one to one
+  per week, the pairs sharing the most cards first (copies counted, same inks), if at least
+  `config.archetypes.weekShared` of 60. One archetype shares 50 to 60 cards with itself from week
+  to week; two near builds of one inks up to 48 (He Hurled and Woolter), hence one to one. A week's
+  archetype matching nothing makes one of its own, which older weeks can match. Every week then
+  names an archetype by today's name. With fresh ids, slugs and names on every past week, the
+  matching comes out the same.
+- Today's name of an archetype (`archetypeNames`) is that of its profiles with the most games:
+  duels.ink names each profile, and those of one archetype don't always agree (He Hurled's are
+  "Midrange" for 33 000 games and "Touch Paradise" for 17 000).
+- Near twins are merged into one deck: two of today's archetypes of one inks whose average lists
+  share at least `config.archetypes.mergeShared` (45) cards are variants of it, keyed by the most
+  played one. That merges Midrange He Hurled with Midrange Woolter (48 cards in common, both
+  "Midrange" for duels.ink) and Midrange Merlin Ursula with Midrange Hades (49); the next closest
+  pair shares 43.5, where merging would start chaining distinct Amethyst/Ruby decks together.
+  Weeks are still matched variant by variant (one to one keeps them apart), then each goes to its
+  deck: their games add up, and the games between two variants, now a mirror, are left out. A
+  tournament list keeps its variant, and the card analyses say how a deck's lists split between
+  them.
+- `listArchetype` gives a tournament decklist the archetype whose average list shares the most
+  cards with it, if at least `config.archetypes.listShared`; otherwise its ink pair's "Autres
+  listes".
+
 ## Tournaments
 
 `tournaments/` looks at the big paper tournaments rather than the ladder: the core tournaments of
@@ -114,23 +152,20 @@ tournament stays around 100 kB.
 | Cartes du top cut          | One deck's top-cut lists, card by card: in every list, in at least half of them ("proches"), or fewer (possible tech cards) |
 | Tournois retenus           | The tournaments counted, with their top cut                                                                                 |
 
-Lorcanahunter's archetypes are ink pairs, so the page also tells the builds apart: on loading,
-every public list of the period is sorted into sub-archetypes, ink pair by ink pair. Lists are
-grouped while they share, on average, at least half their cards (`subArchetypeShared`, copies
-counted), and each group is named after its two signature cards, in its lists and the rarest in
-every other list.
+Lorcanahunter's own archetypes are ink pairs, so the page uses the ladder's, as every page does
+(see [Archetypes](#archetypes)): on loading, every public list of the period goes to the closest
+ladder archetype of its inks.
 
-The starting field, the conversion and the rounds have an inks / archetypes / sub-archetypes
-switch. By sub-archetype, a player without a public list is left out, and a tournament only counts
-when at least half its players outside the top cut published theirs (`minListShare`): the top
-cut's lists are all public, so lists of a thin share of the others would put nearly every listed
-player in it. The switch's tooltip names the tournaments left out. The card analysis has an inks / archetypes
-switch and offers each deck's sub-archetypes in its picker.
+Every card has an inks / archetypes switch. By archetype, a player without a public list is left
+out, and a tournament only counts when at least half its players outside the top cut published
+theirs (`minListShare`): the top cut's lists are all public, so lists of a thin share of the others
+would put nearly every listed player in it. The switch's tooltip names the tournaments left out.
+By inks, the card analysis offers each pair's archetypes in its picker.
 
 For one build, the card analysis also gives a median list to play: each card at its median
 copies over the lists (a missing card counting 0), then copies added or removed where the mean is
 the farthest until the deck has the lists' median size (60 at least), with the real list closest
-to it. A copy button gives it as "4 Angel - Siren Singer" lines, the format deck builders import. Players whose deck is unknown (private decklists), or by archetype not recognised, are
+to it. A copy button gives it as "4 Angel - Siren Singer" lines, the format deck builders import. Players whose deck is unknown (private decklists), or by archetype without a public list, are
 left out of the shares, and the cards say how many are kept.
 
 Once a top cut is played, the standings follow the bracket (winner, finalist, semi-finalists…),
@@ -157,24 +192,21 @@ the archetype profiles are missing). The settings every card depends on sit in a
 kept in view while scrolling: where the field comes from (tournaments / ladder), how much it
 adapts, and the players expected.
 
-By archetype, every tournament decklist goes to the ladder archetype whose average list it is
-closest to: `npm run collect` also stores `data/<queue>/profiles.json`, the average list and
-signature cards of each archetype profile over the set (the API's `profiles`, outside its stable
-contract like the archetypes), with card names from the [Lorcast API](https://lorcast.com/docs/api)
-(kept in `data/cards.json`, fetched again only for a set not seen yet). A list sharing fewer than
-`minSharedCards` cards with every profile of its inks goes to its pair's "Autres listes", as do
-the ladder decks no archetype recognises. Each ink pair's tournament share is then split as its
-lists are, its top cut and the rest of its players apart (the lists are mostly the top cut's), or
-as on the ladder when it has no list. An archetype matchup is pulled toward its ink pairs' one
-rather than toward even, so a thin one stays close to what its inks do. The ladder's card swings
-(`pairCardLift`) only come by ink pair with the rank filter: the content card shows them by pair.
+Archetypes are the ladder's, as on every page (see [Archetypes](#archetypes)): every tournament
+decklist goes to the closest one, and the ladder decks no archetype recognises, like the lists
+close to none, make their ink pair's "Autres listes". Each ink pair's tournament share is then
+split as its lists are, its top cut and the rest of its players apart (the lists are mostly the
+top cut's), or as on the ladder when it has no list. An archetype matchup is pulled toward its ink
+pairs' one rather than toward even, so a thin one stays close to what its inks do. The ladder's
+card swings (`pairCardLift`) only come by ink pair with the rank filter: the content card shows
+them by pair.
 
-| Card            | What it shows                                                                                                                                                                                                                                                                                                    |
-| --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Field attendu   | Each deck's share of the tournaments' players, its ladder play rate (BO1 Legendary+, last finished weeks), their blend (a slider), and the forecast, which can be set by hand                                                                                                                                    |
-| Quel deck jouer | Match win rate against the forecast field, the worst of it if the field shifts 10 points toward one deck, and the simulated event: Day 2, top cut, title, Day 2's field                                                                                                                                          |
-| Fiche matchups  | One deck against each opponent, most expected first: game win rates on the play and on the draw, the raw ladder figures, the match in BO3 and BO5, its weight on the total, and the opponent's key cards (by archetype, its ladder signature cards). Prints alone, with an empty "Plan de jeu" column to fill in |
-| Contenu         | The cards of the deck's public lists: their share in the top cut's lists and in the others, copies, and the match win rate of the players with each card and without it; then its ink pair's card swings on the ladder                                                                                           |
+| Card            | What it shows                                                                                                                                                                                                                                                                                                                             |
+| --------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Field attendu   | Each deck's share of the tournaments' players, its ladder play rate (BO1 Legendary+, last finished weeks), their blend (a slider), and the forecast, which can be set by hand                                                                                                                                                             |
+| Quel deck jouer | Match win rate against the forecast field, the worst of it if the field shifts 10 points toward one deck, and the simulated event: Day 2, top cut, title, Day 2's field                                                                                                                                                                   |
+| Fiche matchups  | One deck against each opponent, most expected first: game win rates on the play and on the draw, the raw ladder figures, the match in BO3 and BO5, its weight on the total, and the opponent's key cards (by archetype, its ladder signature cards). Then its mulligan guide. Prints alone, with an empty "Plan de jeu" column to fill in |
+| Contenu         | The cards of the deck's public lists: their share in the top cut's lists and in the others, copies, and the match win rate of the players with each card and without it; then its ink pair's card swings on the ladder                                                                                                                    |
 
 Game win rates come from every ladder BO1 week of the set, each pulled toward the queue's
 average on the play (or on the draw) by `priorGames` games, so a thin matchup stays near "even".
@@ -188,9 +220,24 @@ much in log-odds). On such a deck, `teamShare` of its simulated players play wit
 its figures are theirs. Every setting, the overrides, the edges and the deck shown are in the URL,
 to share a scenario.
 
+Every win rate against the field, and the Day 2 and top-cut chances, come with their range (90 %
+of the draws): the matchups are drawn again `uncertaintySamples` times, each game win rate from
+its Beta distribution given the games behind it (prior included), its reverse as its complement
+(`sampleRates`). The simulation's runs are split into `uncertaintyBatches` batches, each on its own
+draw, so a chance's range also holds the simulation's own chance. Two decks whose ranges overlap
+widely aren't told apart by these data.
+
 The card analysis compares players of one deck: the public lists are mostly the top cut's, so
 every win rate is high and only the gap between players with and without a card means something.
 Its interval is at 99 %, since every card of the deck is tested at once.
+
+The mulligan guide comes from the ladder's opening hands (`archetypeOpening`, kept to the rank
+filter): `npm run collect` sums them per archetype and seat into `openings` in profiles.json (the
+API gives them per profile, under ids only valid within one response). For each card, the game
+win rate when it was kept and when it was sent back: the cards whose keeping clearly wins more (99
+% interval of the gap) are to keep, those clearly winning less to send back, with how often
+players keep them. A kept card also tells of the rest of the hand, so it's a guide, not the
+card's own worth.
 
 The forecast can also adapt to the matchups, as a scenario (the "Adaptation" slider, 0 by
 default): a share of the players picks its deck again against the blended field, each deck drawing

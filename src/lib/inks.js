@@ -30,7 +30,7 @@ export function deckName(colors) {
  * "Max Goof Tod": an archetype's key cards, from its slug ("amber-emerald-max-goof-tod") once
  * the inks are dropped. Stands in for archetypes duels.ink hasn't named.
  */
-function slugCards({ slug, colors }) {
+export function slugCards({ slug, colors }) {
   if (!slug) return null;
   const words = slug.split('-');
   while (words.length > 1 && colors.includes(words[0])) words.shift();

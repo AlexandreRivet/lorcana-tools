@@ -17,13 +17,14 @@ import { metaTableChart } from '../src/charts/meta-table.js';
 import { moversChart } from '../src/charts/movers.js';
 import { themes } from '../src/charts/theme.js';
 import { config } from '../src/config.js';
+import { reconcileArchetypes } from '../src/lib/archetypes.js';
 import { buildDigestCard } from '../src/lib/digest-message.js';
 import { VIEWS, buildReport, countsMatches, hasArchetypes } from '../src/lib/metrics.js';
 import { buildPodcastFacts } from '../src/lib/podcast-facts.js';
 import { chartRelevance } from '../src/lib/relevance.js';
 import { lastFinishedWeekEnd, pickFeaturedQueue } from '../src/lib/queues.js';
 import { createDocument, svgToPng } from '../src/lib/render-png.js';
-import { readAllWeeks, readIndex } from '../src/lib/store.js';
+import { readAllWeeks, readIndex, readProfiles } from '../src/lib/store.js';
 
 export const OUT_DIR = fileURLToPath(new URL('../out/digest/', import.meta.url));
 
@@ -116,7 +117,11 @@ for (const format of FORMATS) {
     summary.skipped.push({ format, queue: candidates[0].queue });
     continue;
   }
-  const snapshots = await readAllWeeks(index.queue);
+  // One archetype under one key and today's name in every week, as on the page
+  const { weeks: snapshots } = reconcileArchetypes(
+    await readAllWeeks(index.queue),
+    (await readProfiles(index.queue))?.profiles ?? [],
+  );
 
   // The last finished week (the one in progress is stored too, for the page)
   const finished = snapshots.filter((s) => s.week.endDate <= lastEnd);
