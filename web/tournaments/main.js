@@ -838,6 +838,11 @@ async function load() {
     return rest.filter((p) => p.list).length >= minListShare * rest.length;
   });
   data = { index, events, listedEvents, matchups: matchupReport(events) };
+  if (index.mock) {
+    $('warning').textContent =
+      'Données de tournois de test : ces chiffres ne reflètent pas de vrais résultats.';
+    $('warning').hidden = false;
+  }
   data.reports = Object.fromEntries(
     ALL_VIEWS.map((view) => [view, fieldReport(eventsFor(view), view)]),
   );
