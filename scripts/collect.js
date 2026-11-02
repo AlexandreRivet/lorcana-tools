@@ -6,8 +6,18 @@
 import { setTimeout as sleep } from 'node:timers/promises';
 import { config } from '../src/config.js';
 import { fetchMeta } from '../src/lib/duels-api.js';
+import { fetchCardNames } from '../src/lib/lorcast.js';
 import { parseQueueId } from '../src/lib/queues.js';
-import { readAllWeeks, readIndex, readWeek, writeIndex, writeWeek } from '../src/lib/store.js';
+import {
+  readAllWeeks,
+  readCardNames,
+  readIndex,
+  readWeek,
+  writeCardNames,
+  writeIndex,
+  writeProfiles,
+  writeWeek,
+} from '../src/lib/store.js';
 
 // 60 requests / 60 s per IP: stay below it.
 const REQUEST_INTERVAL_MS = 1100;
@@ -228,6 +238,70 @@ async function collectQueue(id) {
   });
 
   console.log(`  ${written} week(s) written, ${snapshots.length} stored`);
+  await saveProfiles(id, overview);
+}
+
+/** Card names by duels.ink id: the stored ones, plus Lorcast's for sets not seen yet. */
+async function cardNames(ids) {
+  const names = await readCardNames();
+  const missing = [...new Set(ids.filter((id) => !names[id]).map((id) => id.split('-')[0]))];
+  if (!missing.length) return names;
+  try {
+    Object.assign(names, await fetchCardNames(missing));
+    await writeCardNames(names);
+  } catch (error) {
+    // Unnamed cards only weaken the tournament lists' archetypes: keep collecting
+    console.log(`::warning title=Card names::${error.message}`);
+  }
+  return names;
+}
+
+/**
+ * The archetypes' average lists over the queue's whole set, for the tournament preparation page:
+ * it sorts tournament decklists into the ladder's archetypes by the closest one. Per profile (a
+ * cluster of lists; several make an archetype): its archetype, its average list and signature
+ * cards by name. Per ink pair, the cards whose players did the best and the worst
+ * (`pairCardLift`: with the rank filter, the API gives it by ink pair only, not by profile).
+ * Outside the API's stable contract, like the archetypes: nothing is written when it's missing.
+ */
+async function saveProfiles(id, data) {
+  const profiles = (data.profiles ?? []).filter((p) => p.archetypeId && p.centroidCounts);
+  if (!profiles.length) return;
+  const pairLift = Object.entries(data.pairCardLift ?? {});
+  const ids = [
+    ...profiles.flatMap((p) => [...Object.keys(p.centroidCounts), ...(p.signatureCards ?? [])]),
+    ...pairLift.flatMap(([, cards]) => cards.map((c) => c.cardId)),
+  ];
+  const names = await cardNames(ids);
+  const name = (cardId) => names[cardId] ?? cardId;
+  await writeProfiles(id, {
+    updatedAt: data.updatedAt,
+    profiles: profiles.map((p) => ({
+      archetypeId: p.archetypeId,
+      // Named here too: an archetype of the set may be missing from the stored weeks
+      name: p.archetypeName ?? null,
+      slug: p.archetypeSlug ?? null,
+      colors: p.colors,
+      lists: p.sampleCount,
+      games: p.gamesPlayed,
+      winRate: p.winRate,
+      cards: Object.entries(p.centroidCounts).map(([cardId, copies]) => [name(cardId), copies]),
+      signature: (p.signatureCards ?? []).map(name),
+    })),
+    pairLift: Object.fromEntries(
+      pairLift.map(([inks, cards]) => [
+        inks,
+        cards.map((c) => ({
+          card: name(c.cardId),
+          lift: c.lift,
+          presence: c.presence,
+          games: c.gamesWith,
+          winRate: c.winRateWith,
+        })),
+      ]),
+    ),
+  });
+  console.log(`  ${profiles.length} archetype profiles written`);
 }
 
 const failed = [];

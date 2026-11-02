@@ -32,6 +32,18 @@ async function writeJson(file, data, { pretty = false } = {}) {
 
 export const readIndex = (queue) => readJson(path.join(queueDir(queue), 'index.json'));
 
+/** data/<queue>/profiles.json: the archetypes' average lists over the queue's set (see collect.js). */
+export const readProfiles = (queue) => readJson(path.join(queueDir(queue), 'profiles.json'));
+
+export const writeProfiles = (queue, profiles) =>
+  writeJson(path.join(queueDir(queue), 'profiles.json'), profiles);
+
+/** data/cards.json: card names by duels.ink id, from Lorcast, kept between runs. */
+export const readCardNames = async () => (await readJson(path.join(DATA_DIR, 'cards.json'))) ?? {};
+
+export const writeCardNames = (names) =>
+  writeJson(path.join(DATA_DIR, 'cards.json'), names, { pretty: true });
+
 export const writeIndex = (queue, index) =>
   writeJson(path.join(queueDir(queue), 'index.json'), index, { pretty: true });
 
