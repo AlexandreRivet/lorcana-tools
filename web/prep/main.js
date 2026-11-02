@@ -539,7 +539,7 @@ function renderScenario() {
       label: 'Adaptation',
       title:
         'Part des joueurs qui choisissent leur deck en fonction du field prévu : ils vont vers les decks qui le battent. Un scénario, pas une mesure : le ladder du set ne montre pas encore cet effet.',
-      step: 0.1,
+      step: 0.05,
       value: state.adaptation,
       describe: (a) => (a > 0 ? `${formatPct(100 * a, 0)} des joueurs` : 'aucune'),
       onChange: (a) => {

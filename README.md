@@ -245,8 +245,8 @@ win rate when it was kept and when it was sent back: the cards whose keeping cle
 players keep them. A kept card also tells of the rest of the hand, so it's a guide, not the
 card's own worth.
 
-The forecast can also adapt to the matchups, as a scenario (the "Adaptation" slider, 0 by
-default): a share of the players picks its deck again against the blended field, each deck drawing
+The forecast can also adapt to the matchups, as a scenario (the "Adaptation" slider, 25 %
+by default): a share of the players picks its deck again against the blended field, each deck drawing
 them in proportion to its share times exp(`adaptationSelectivity` × its match win rate gap to the
 field, in points), one step only; the overrides come last, each share kept as typed, the other
 decks sharing what's left of 100 %. The "Si le field s'adapte" column is

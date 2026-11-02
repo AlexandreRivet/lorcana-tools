@@ -86,7 +86,7 @@ export const config = {
   prep: {
     event: 'Londres',
     /** Expected players: only the field's proportions matter for the win rates, not its size. */
-    players: 1200,
+    players: 2048,
     /** Day 1: `day1Rounds` swiss rounds, Day 2 from `day2Points` points (3 a win, 1 a draw). */
     day1Rounds: 8,
     day2Points: 18,
@@ -118,11 +118,14 @@ export const config = {
      * against the forecast field, 0 to 1 (a slider), and how strongly they lean toward the decks
      * that beat it, per point of match win rate.
      */
-    adaptation: 0,
+    adaptation: 0.25,
     adaptationSelectivity: 0.15,
     /** Field shifted toward one deck by this many points, to find each deck's worst case. */
     stressPoints: 10,
-    /** Simulated tournaments per run: ~1 s for 2 000 of 1 200 players. */
+    /**
+     * Simulated tournaments per run: ~5 s for 2 000 of 2 048 players, in a worker (the page stays
+     * usable meanwhile).
+     */
     simulations: 2000,
     /**
      * Uncertainty: the matchups drawn again this many times, from the games they rest on, for
