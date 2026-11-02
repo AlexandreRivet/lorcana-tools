@@ -1,0 +1,62 @@
+{
+  "collectedAt": "2026-11-02T17:16:09.001Z",
+  "window": {
+    "from": "2026-10-19",
+    "to": "2026-11-02"
+  },
+  "minPlayers": 75,
+  "mock": true,
+  "tournaments": [
+    {
+      "id": 18082,
+      "name": "Disney Lorcana TCG Challenge Bangkok 2026 - Main Event",
+      "slug": "saka-saka-disney-lorcana-tcg-challenge-bangkok-2026-main-event",
+      "date": "2026-10-31",
+      "eventType": null,
+      "city": null,
+      "country": "Hong Kong",
+      "players": 778,
+      "knownDecks": 706,
+      "cut": {
+        "size": 128,
+        "assumed": false
+      },
+      "lists": 706,
+      "cutLists": 128
+    },
+    {
+      "id": 18083,
+      "name": "Inkbound Invitational 1",
+      "slug": "jacktradescards-events-inkbound-invitational-1",
+      "date": "2026-10-31",
+      "eventType": null,
+      "city": null,
+      "country": null,
+      "players": 138,
+      "knownDecks": 128,
+      "cut": {
+        "size": 8,
+        "assumed": true
+      },
+      "lists": 128,
+      "cutLists": 8
+    },
+    {
+      "id": 17977,
+      "name": "TOURNOI LA FORGE #03 : HYPERIA CITY",
+      "slug": "la-forge-tournoi-la-forge-03-hyperia-city",
+      "date": "2026-10-31",
+      "eventType": null,
+      "city": null,
+      "country": "France",
+      "players": 91,
+      "knownDecks": 91,
+      "cut": {
+        "size": 16,
+        "assumed": false
+      },
+      "lists": 91,
+      "cutLists": 16
+    }
+  ]
+}
