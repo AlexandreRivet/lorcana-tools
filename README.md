@@ -191,7 +191,10 @@ its credentials go in `.env` locally and in the repository secrets for the daily
 against the field it will most likely meet. Decks are the ladder's archetypes (by inks only when
 the archetype profiles are missing). The settings every card depends on sit in a "Scénario" bar
 kept in view while scrolling: where the field comes from (tournaments / ladder), how much it
-adapts, and the players expected.
+adapts, and the players expected. Above it, the event's format and the data behind the forecast;
+under it, once the simulation is done, the decks with the best chance of Day 2, of the top cut and
+of winning, each against an average player, among the decks of at least 2 % of the field (the
+rarer ones' chances are mostly the simulation's luck), "Autres listes" and "Petits decks" aside.
 
 Archetypes are the ladder's, as on every page (see [Archetypes](#archetypes)): every tournament
 decklist goes to the closest one, and the ladder decks no archetype recognises, like the lists

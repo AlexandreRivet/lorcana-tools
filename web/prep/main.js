@@ -387,6 +387,7 @@ function simulated() {
         top: (100 * c.top) / c.players,
         topRange: spread(i, deck, 'top'),
         wins: (100 * c.wins) / c.players,
+        winsRange: spread(i, deck, 'wins'),
         day2Share: (100 * (counts[i].day2 + team[i].day2)) / day2,
         players: c.players,
       };
@@ -441,23 +442,45 @@ function renderKpis() {
     ),
     kpi('Parties ladder', formatInt(ladderGames), 'BO1 Legendary et plus, pour les matchups'),
   ];
-  const sim = simulated();
-  if (sim) {
-    const best = current.field
-      .map((deck, i) => ({ deck, ...sim.decks[i] }))
-      .filter((d) => d.deck.key !== OTHER)
-      .sort((a, b) => b.top - a.top)[0];
-    const value = el('span', { class: 'deck-cell' });
-    value.append(chips(best.deck.colors), el('span', {}, formatPct(best.top)));
-    tiles.push(
-      kpi(
-        `Meilleure chance de top ${prep.topCut}`,
-        value,
-        `${deckLabel(best.deck)}, entre ${rangeText(best.topRange, 2)} % ; ×${(best.top / sim.baseline.top).toFixed(1).replace('.', ',')} un joueur moyen (${formatPct(sim.baseline.top, 2)})`,
-      ),
-    );
-  }
   $('kpis').replaceChildren(...tiles);
+  renderBest();
+}
+
+/** The chances of the "best chances" band: label, figure, its range, its digits. */
+const CHANCES = [
+  { field: 'day2', range: 'day2Range', label: 'J2', digits: 1 },
+  { field: 'top', range: 'topRange', label: `Top ${prep.topCut}`, digits: 2 },
+  { field: 'wins', range: 'winsRange', label: 'victoire', digits: 2 },
+];
+
+/**
+ * The best deck for each chance of the simulation (Day 2, top cut, title), among the decks one can
+ * play (no "Petits decks" nor "Autres listes") and, when some are, those played enough for their
+ * figures to hold (SHEET_MIN_SHARE): a rare deck's title chance is mostly the simulation's luck.
+ * Placeholders while the simulation runs.
+ */
+function renderBest() {
+  const sim = simulated();
+  const playable = current.field
+    .map((deck, i) => ({ deck, ...sim?.decks[i] }))
+    .filter(({ deck }) => deck.key !== OTHER && !isRest(deck.key));
+  const played = playable.filter(({ deck }) => deck.share >= SHEET_MIN_SHARE);
+  const candidates = played.length ? played : playable;
+  const tiles = CHANCES.map(({ field, range, label, digits }) => {
+    const title = `Meilleure chance de ${label}`;
+    if (!sim || !candidates.length) return kpi(title, '…', 'Simulation en cours');
+    const best = [...candidates].sort((a, b) => b[field] - a[field])[0];
+    const value = el('span', { class: 'deck-cell' });
+    value.append(chips(best.deck.colors), el('span', {}, formatPct(best[field], digits)));
+    const baseline = sim.baseline[field];
+    return kpi(
+      title,
+      value,
+      `${deckLabel(best.deck)}, entre ${rangeText(best[range], digits)} % ; ×${(best[field] / baseline).toFixed(1).replace('.', ',')} un joueur moyen (${formatPct(baseline, digits)})`,
+    );
+  });
+  $('best').replaceChildren(...tiles);
+  $('best').hidden = false;
 }
 
 /**
