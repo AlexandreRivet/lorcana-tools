@@ -546,7 +546,7 @@ function fieldCard() {
   const { figure, body } = card(
     'field',
     `Field attendu à ${prep.event}`,
-    `Part de chaque deck : celle des gros tournois récents mélangée à celle du ladder Legendary+ des dernières semaines. Corrigez une part à la main (ce que jouent les équipes connues, la hype) : le reste est renormalisé et tout se recalcule.${view() === VIEWS.archetypes ? ' Par archétype : chaque liste de tournoi va à l’archétype du ladder dont la liste moyenne lui ressemble le plus, et chaque paire d’encres se répartit comme ses listes (top cut et reste du tournoi à part). « Autres listes » : celles qu’aucun archétype ne reconnaît.' : ''}`,
+    `Part de chaque deck : celle des gros tournois récents mélangée à celle du ladder Legendary+ des dernières semaines. Corrigez une part à la main (ce que jouent les équipes connues, la hype) : elle est gardée telle quelle, les autres decks se partagent le reste et tout se recalcule.${view() === VIEWS.archetypes ? ' Par archétype : chaque liste de tournoi va à l’archétype du ladder dont la liste moyenne lui ressemble le plus, et chaque paire d’encres se répartit comme ses listes (top cut et reste du tournoi à part). « Autres listes » : celles qu’aucun archétype ne reconnaît.' : ''}`,
   );
 
   if (Object.keys(state.overrides).length) {

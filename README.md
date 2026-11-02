@@ -242,7 +242,8 @@ card's own worth.
 The forecast can also adapt to the matchups, as a scenario (the "Adaptation" slider, 0 by
 default): a share of the players picks its deck again against the blended field, each deck drawing
 them in proportion to its share times exp(`adaptationSelectivity` × its match win rate gap to the
-field, in points), one step only; the overrides come last. The "Si le field s'adapte" column is
+field, in points), one step only; the overrides come last, each share kept as typed, the other
+decks sharing what's left of 100 %. The "Si le field s'adapte" column is
 each deck's win rate once every player has done so: whether it holds up once the room has
 countered the meta. It isn't fitted on data because the data doesn't show it: on the set's first
 ladder weeks (Legendary+, October 2026), a deck's win rate one week didn't raise its play rate the

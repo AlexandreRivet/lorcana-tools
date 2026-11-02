@@ -332,16 +332,28 @@ export function adaptField(field, matrix, alpha, selectivity = config.prep.adapt
 }
 
 /**
- * The user's overrides (shares in %) in place of the forecast's, then every share renormalised to
- * 100 %.
+ * The user's overrides (shares in %) in place of the forecast's: each one kept as typed, the other
+ * decks sharing what's left of 100 % in their forecast's proportions. Overrides adding up to more
+ * than 100 % are scaled down to it, the other decks then getting nothing.
  */
 export function applyOverrides(field, overrides) {
   const rows = field.map((d) => {
     const overridden = overrides[d.key] != null;
     return { ...d, overridden, share: overridden ? Math.max(0, overrides[d.key]) : d.share };
   });
-  const total = rows.reduce((sum, d) => sum + d.share, 0) || 1;
-  for (const d of rows) d.share = (100 * d.share) / total;
+  const sum = (list) => list.reduce((total, d) => total + d.share, 0);
+  const fixed = rows.filter((d) => d.overridden);
+  const free = rows.filter((d) => !d.overridden);
+  const left = 100 - sum(fixed);
+  if (left > 0 && sum(free) > 0) {
+    const scale = left / sum(free);
+    for (const d of free) d.share *= scale;
+  } else {
+    // Nothing left to share, or no deck to share it: the overrides make the whole field
+    for (const d of free) d.share = 0;
+    const scale = 100 / (sum(fixed) || 1);
+    for (const d of fixed) d.share *= scale;
+  }
   return sortField(rows);
 }
 
