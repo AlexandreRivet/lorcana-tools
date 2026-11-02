@@ -1,0 +1,227 @@
+/* Same cards, key figures, tables and chips as the tournaments page */
+@import '../tournaments/style.css';
+
+.warning {
+  margin: 20px 0 0;
+  padding: 12px 16px;
+  border: 1px solid var(--border);
+  border-left: 4px solid #d38b02;
+  border-radius: 8px;
+  background: var(--surface);
+}
+
+.card-html td.num,
+.card-html th.num {
+  text-align: right;
+}
+
+/* The forecast share the user sets in place of the blended one */
+.share-input {
+  width: 5.5em;
+  padding: 2px 6px;
+  text-align: right;
+}
+
+.share-input.overridden {
+  border-color: var(--accent);
+  font-weight: 600;
+}
+
+.players-input {
+  width: 6em;
+}
+
+/* A rate as a thin bar, then its value */
+.rate {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.rate .presence-track {
+  width: 60px;
+}
+
+/* Over 50 % / under, in the deck table's win rates */
+.good {
+  color: #2a8934;
+}
+
+.bad {
+  color: #d3082f;
+}
+
+@media (prefers-color-scheme: dark) {
+  .good {
+    color: #4cc55a;
+  }
+
+  .bad {
+    color: #ff5a73;
+  }
+}
+
+/* The deck table's rows open their matchup sheet */
+.deck-row {
+  cursor: pointer;
+}
+
+.deck-row:hover td {
+  background: var(--hover-wash);
+}
+
+.deck-row[aria-selected='true'] td {
+  background: var(--hover-wash);
+  font-weight: 600;
+}
+
+.baseline-row td {
+  color: var(--text-2);
+  font-style: italic;
+}
+
+/* The scenario bar: the settings every card depends on, kept in view while scrolling */
+.scenario {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 28px;
+  margin: 0 0 20px;
+  padding: 12px 20px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+}
+
+.scenario-title {
+  font-weight: 600;
+}
+
+.scenario-control {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-2);
+}
+
+.scenario-label {
+  color: var(--text);
+  font-weight: 500;
+}
+
+.scenario-control input[type='range'] {
+  width: 140px;
+  padding: 0;
+}
+
+.scenario-value {
+  min-width: 11em;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+
+.scenario .progress {
+  margin-left: auto;
+}
+
+@media (max-width: 640px) {
+  .scenario {
+    position: static;
+  }
+}
+
+.tier-title {
+  margin: 8px 0 0;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.progress {
+  color: var(--text-2);
+  font-size: 13px;
+}
+
+/* Only on paper: the sheet's context line and its empty "Plan de jeu" column */
+.print-only {
+  display: none;
+}
+
+@media print {
+  /* Paper is white, whatever the screen's theme */
+  :root {
+    --page: #fff;
+    --surface: #fff;
+    --text: #0b0b0b;
+    --text-2: #52514e;
+    --grid: #d0d0d0;
+  }
+
+  .card-html th.print-only,
+  .card-html td.print-only {
+    display: table-cell;
+  }
+
+  p.print-only {
+    display: block;
+  }
+
+  /* "Imprimer la fiche": the matchup sheet alone, without its controls */
+  body.print-sheet .page > :not(#charts),
+  body.print-sheet .charts > :not(#sheet),
+  .card-controls,
+  .scenario,
+  .warning {
+    display: none !important;
+  }
+
+  body {
+    background: #fff;
+    font-size: 11px;
+  }
+
+  .page {
+    padding: 0;
+  }
+
+  .charts {
+    display: block;
+  }
+
+  .card {
+    border: 0;
+    break-inside: auto;
+  }
+
+  .card-html table {
+    width: 100%;
+    font-size: 10px;
+    white-space: normal;
+  }
+
+  .card-html th,
+  .card-html td {
+    padding: 3px 8px 3px 0;
+  }
+
+  .card-html .deck-cell {
+    white-space: nowrap;
+  }
+
+  .card-html td.print-only {
+    width: 30%;
+    border-bottom: 1px solid #999;
+  }
+
+  .chip,
+  .presence-fill,
+  .good,
+  .bad {
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+}

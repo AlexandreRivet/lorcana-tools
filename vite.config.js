@@ -20,6 +20,7 @@ export default defineConfig({
         meta: page('meta/index.html'),
         proxies: page('proxies/index.html'),
         tournaments: page('tournaments/index.html'),
+        prep: page('prep/index.html'),
         podcast: page('podcast/index.html'),
         episode: page('podcast/episode/index.html'),
       },

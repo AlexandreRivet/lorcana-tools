@@ -92,9 +92,9 @@ export function packLists(players) {
 const unpacked = new WeakMap();
 
 /**
- * Every public list of a tournament, unpacked: { standing, topCut, deck, cards, event }, cards as
- * { name, quantity, cost, inkwell }. The deck is the player's own object, so a sub-archetype set
- * on it shows in every report.
+ * Every public list of a tournament, unpacked: { standing, topCut, wins, losses, deck, cards,
+ * event }, cards as { name, quantity, cost, inkwell }. The deck is the player's own object, so a
+ * sub-archetype set on it shows in every report.
  */
 export function eventLists(event) {
   if (!unpacked.has(event)) {
@@ -105,6 +105,8 @@ export function eventLists(event) {
         .map((p) => ({
           standing: p.standing,
           topCut: p.topCut,
+          wins: p.wins ?? 0,
+          losses: p.losses ?? 0,
           deck: p.deck,
           cards: p.list.map(([i, quantity]) => ({ ...event.cards[i], quantity })),
           event,

@@ -149,6 +149,59 @@ It needs an application approved by Lorcanahunter (scopes `tournaments:read` and
 its credentials go in `.env` locally and in the repository secrets for the daily run (see
 [GitHub setup](#github-setup)), which skips the step until they are set.
 
+## Tournament preparation
+
+`prep/` prepares one event (London by default, its format in `config.prep`): which deck to play
+against the field it will most likely meet. Decks are the ladder's archetypes (by inks only when
+the archetype profiles are missing). The settings every card depends on sit in a "Scénario" bar
+kept in view while scrolling: where the field comes from (tournaments / ladder), how much it
+adapts, and the players expected.
+
+By archetype, every tournament decklist goes to the ladder archetype whose average list it is
+closest to: `npm run collect` also stores `data/<queue>/profiles.json`, the average list and
+signature cards of each archetype profile over the set (the API's `profiles`, outside its stable
+contract like the archetypes), with card names from the [Lorcast API](https://lorcast.com/docs/api)
+(kept in `data/cards.json`, fetched again only for a set not seen yet). A list sharing fewer than
+`minSharedCards` cards with every profile of its inks goes to its pair's "Autres listes", as do
+the ladder decks no archetype recognises. Each ink pair's tournament share is then split as its
+lists are, its top cut and the rest of its players apart (the lists are mostly the top cut's), or
+as on the ladder when it has no list. An archetype matchup is pulled toward its ink pairs' one
+rather than toward even, so a thin one stays close to what its inks do. The ladder's card swings
+(`pairCardLift`) only come by ink pair with the rank filter: the content card shows them by pair.
+
+| Card            | What it shows                                                                                                                                                                                                                                                                                                    |
+| --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Field attendu   | Each deck's share of the tournaments' players, its ladder play rate (BO1 Legendary+, last finished weeks), their blend (a slider), and the forecast, which can be set by hand                                                                                                                                    |
+| Quel deck jouer | Match win rate against the forecast field, the worst of it if the field shifts 10 points toward one deck, and the simulated event: Day 2, top cut, title, Day 2's field                                                                                                                                          |
+| Fiche matchups  | One deck against each opponent, most expected first: game win rates on the play and on the draw, the raw ladder figures, the match in BO3 and BO5, its weight on the total, and the opponent's key cards (by archetype, its ladder signature cards). Prints alone, with an empty "Plan de jeu" column to fill in |
+| Contenu         | The cards of the deck's public lists: their share in the top cut's lists and in the others, copies, and the match win rate of the players with each card and without it; then its ink pair's card swings on the ladder                                                                                           |
+
+Game win rates come from every ladder BO1 week of the set, each pulled toward the queue's
+average on the play (or on the draw) by `priorGames` games, so a thin matchup stays near "even".
+A match is played from them exactly: game 1's first player at random, then the loser of each game
+goes first. The simulation ([src/lib/forecast.js](src/lib/forecast.js), in a web worker) plays the
+whole event 2 000 times: swiss rounds paired by points, the Day 2 cut on points, more rounds, the
+top cut by points then a seeded bracket. Players differ by their deck alone (no real tiebreakers,
+no rematch avoidance), except the team's: "Votre niveau" gives our players an edge on a deck, in
+points of game win rate over its average player (+5: 55 % in an even game, every rate moved as
+much in log-odds). On such a deck, `teamShare` of its simulated players play with the edge and
+its figures are theirs. Every setting, the overrides, the edges and the deck shown are in the URL,
+to share a scenario.
+
+The card analysis compares players of one deck: the public lists are mostly the top cut's, so
+every win rate is high and only the gap between players with and without a card means something.
+Its interval is at 99 %, since every card of the deck is tested at once.
+
+The forecast can also adapt to the matchups, as a scenario (the "Adaptation" slider, 0 by
+default): a share of the players picks its deck again against the blended field, each deck drawing
+them in proportion to its share times exp(`adaptationSelectivity` × its match win rate gap to the
+field, in points), one step only; the overrides come last. The "Si le field s'adapte" column is
+each deck's win rate once every player has done so: whether it holds up once the room has
+countered the meta. It isn't fitted on data because the data doesn't show it: on the set's first
+ladder weeks (Legendary+, October 2026), a deck's win rate one week didn't raise its play rate the
+next (r = −0.40 by inks, none by archetype), and a rising deck didn't keep rising either. Early in
+a set, play rates follow novelty more than results; worth measuring again over a longer set.
+
 ## Proxy generator
 
 `proxies/` turns a public [dreamborn.ink](https://dreamborn.ink) deck into a PDF to print: paste
@@ -250,6 +303,7 @@ web/                   site (Vite): homepage, common.css shared by every page, o
 web/meta/              meta page
 web/proxies/           proxy generator
 web/tournaments/       tournaments page (Lorcanahunter)
+web/prep/              tournament preparation: field forecast, deck choice, simulated event
 web/podcast/           podcast playlist; episode/ plays one, its transcript following the audio
 data/                  collected data, Lorcanahunter tournaments and podcast episodes (committed)
 assets/fonts/          Inter (OFL) for PNG rendering

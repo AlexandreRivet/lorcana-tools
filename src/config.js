@@ -84,6 +84,61 @@ export const config = {
      */
     minListShare: 0.5,
   },
+
+  /**
+   * Tournament preparation page: the expected field of one event, each deck's win rate against
+   * it, and a simulation of the event's swiss rounds and top cut. The defaults are London's.
+   */
+  prep: {
+    event: 'Londres',
+    /** Expected players: only the field's proportions matter for the win rates, not its size. */
+    players: 1200,
+    /** Day 1: `day1Rounds` swiss rounds, Day 2 from `day2Points` points (3 a win, 1 a draw). */
+    day1Rounds: 8,
+    day2Points: 18,
+    /** Day 2: `day2Rounds` more swiss rounds, points carried over, then the top cut. */
+    day2Rounds: 7,
+    topCut: 8,
+    /** Best of: swiss matches, top-cut matches. */
+    swissBestOf: 3,
+    topCutBestOf: 5,
+    /** Share of swiss matches drawn (time called), as a fraction. */
+    drawRate: 0,
+    /** Forecast field: weight of the tournaments against the ladder's last weeks, 0 to 1. */
+    tournamentWeight: 0.6,
+    /** Ladder weeks (BO1, last finished first) whose play rates feed the forecast. */
+    ladderWeeks: 2,
+    /**
+     * Matchups: ladder BO1 games of every week of the set, by inks, each win rate (on the play,
+     * on the draw) pulled toward the queue's average by `priorGames` games: a matchup seen 30
+     * times moves about half way from that average.
+     */
+    priorGames: 30,
+    /** Decks under this forecast share (%) are summed as "Autres", at 50 % against everyone. */
+    minShare: 0.5,
+    /**
+     * Adaptation (a scenario, see adaptField): the share of the players who pick their deck again
+     * against the forecast field, 0 to 1 (a slider), and how strongly they lean toward the decks
+     * that beat it, per point of match win rate.
+     */
+    adaptation: 0,
+    adaptationSelectivity: 0.15,
+    /** Field shifted toward one deck by this many points, to find each deck's worst case. */
+    stressPoints: 10,
+    /** Simulated tournaments per run: ~1 s for 2 000 of 1 200 players. */
+    simulations: 2000,
+    /**
+     * Our players: on a deck the team masters better (or worse) than its average player, this
+     * share of its simulated players play with that edge, counted apart (one at least per run).
+     */
+    teamShare: 0.05,
+    /**
+     * By archetype, a tournament decklist goes to the ladder archetype whose average list shares
+     * the most cards with it (copies counted, out of 60), if at least this many; otherwise to its
+     * ink pair's "Autres listes". A list and its own archetype's average share 50 or so.
+     */
+    minSharedCards: 30,
+  },
 };
 
 export const SOURCE_URL = 'https://duels.ink/stats';
