@@ -233,7 +233,8 @@ Its interval is at 99 %, since every card of the deck is tested at once.
 
 The mulligan guide comes from the ladder's opening hands (`archetypeOpening`, kept to the rank
 filter): `npm run collect` sums them per archetype and seat into `openings` in profiles.json (the
-API gives them per profile, under ids only valid within one response). For each card, the game
+API gives them per profile, under ids only valid within one response); a deck merged from near
+twins adds up its variants' hands (`deckOpenings`). For each card, the game
 win rate when it was kept and when it was sent back: the cards whose keeping clearly wins more (99
 % interval of the gap) are to keep, those clearly winning less to send back, with how often
 players keep them. A kept card also tells of the rest of the hand, so it's a guide, not the

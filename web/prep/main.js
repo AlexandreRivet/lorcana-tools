@@ -6,6 +6,7 @@ import {
   applyOverrides,
   cardPerformance,
   deckLists,
+  deckOpenings,
   fieldWinRate,
   fieldWinRates,
   forecastField,
@@ -1167,8 +1168,8 @@ async function loadLadder() {
     recentWeeks,
     profiles,
     pairLift: stored?.pairLift ?? {},
-    // Opening hands per archetype, already keyed by slug
-    openings: stored?.openings ?? {},
+    // Opening hands per deck, its variants' added up
+    openings: deckOpenings(stored?.openings, profiles),
   };
 }
 

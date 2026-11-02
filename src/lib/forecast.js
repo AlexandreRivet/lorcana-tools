@@ -769,12 +769,45 @@ export const ladderCards = (pairLift, colors) =>
     (a, b) => (b.lift > 0) - (a.lift > 0) || Math.abs(b.lift) - Math.abs(a.lift),
   );
 
+/**
+ * The opening hands of each deck (`openings` in profiles.json are by variant, see collect.js),
+ * its variants' summed card by card: a deck merged from near twins gets all its hands.
+ *
+ * @param {object[]} profiles keyedProfiles()
+ */
+export function deckOpenings(openings = {}, profiles = []) {
+  const deckOf = new Map(profiles.map((p) => [p.variant, p.archetypeId]));
+  const decks = {};
+  for (const [variant, seats] of Object.entries(openings)) {
+    const key = deckOf.get(variant) ?? variant;
+    decks[key] ??= { play: new Map(), draw: new Map() };
+    for (const seat of ['play', 'draw']) {
+      for (const [name, ...counts] of seats[seat] ?? []) {
+        const row = decks[key][seat].get(name) ?? counts.map(() => 0);
+        counts.forEach((n, i) => (row[i] += n));
+        decks[key][seat].set(name, row);
+      }
+    }
+  }
+  return Object.fromEntries(
+    Object.entries(decks).map(([key, seats]) => [
+      key,
+      Object.fromEntries(
+        Object.entries(seats).map(([seat, rows]) => [
+          seat,
+          [...rows].sort((a, b) => b[1][0] - a[1][0]).map(([name, row]) => [name, ...row]),
+        ]),
+      ),
+    ]),
+  );
+}
+
 /** Below this many hands kept (or sent back) with a card, the two aren't compared. */
 const MIN_MULLIGAN_HANDS = 30;
 
 /**
- * The mulligan guide of an archetype, per seat, from its ladder opening hands (`openings` in
- * profiles.json, by slug): for each card, how often it's in the opening hand, how often players
+ * The mulligan guide of an archetype, per seat, from its ladder opening hands (deckOpenings): for
+ * each card, how often it's in the opening hand, how often players
  * keep it, and the game win rate when kept and when sent back, with the 99 % interval of the gap
  * (every card of the deck is tested at once). `keep`: cards whose keeping clearly wins more,
  * `toss`: clearly less. A kept card also tells of the rest of the hand (one sends a card back from
