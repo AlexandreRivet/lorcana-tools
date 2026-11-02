@@ -17,7 +17,8 @@ export function wilson(wins, n, z = 1.96) {
   const denom = 1 + z2 / n;
   const center = (p + z2 / (2 * n)) / denom;
   const half = (z * Math.sqrt((p * (1 - p)) / n + z2 / (4 * n * n))) / denom;
-  return [100 * (center - half), 100 * (center + half)];
+  // Rounding leaves a bound a hair past 0 or 100 when every result goes one way ("−0 %")
+  return [Math.max(0, 100 * (center - half)), Math.min(100, 100 * (center + half))];
 }
 
 /**
