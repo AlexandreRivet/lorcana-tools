@@ -39,13 +39,20 @@ async function fetchWithRetry(params, attempts = 4) {
   }
 }
 
+// An archetype's average list keeps the cards it plays at least this many copies of, on average
+const MIN_AVERAGE_COPIES = 0.25;
+
 /**
  * Archetypes, from the `profiles` and `archetypeMatchups` fields. They are outside the API's
  * stable contract, so null when missing: the page then only offers the ink view.
  * A profile is a deck list cluster, recomputed on every request (its id changes); several
- * profiles share an archetype, whose id is stable from one week to the next. Profiles are
- * summed per archetype, and their matchups stored once per pair (archetypeA < archetypeB),
- * flipped to that side when needed.
+ * profiles share an archetype. Its id changes too whenever duels.ink clusters the lists again, and
+ * its slug and name when it picks other key cards: weeks collected on different days may know one
+ * archetype under several. So each archetype also keeps its average list (`cards`, its profiles'
+ * average lists weighted by games), by which the preparation page tells which archetypes of
+ * different weeks are one (see reconcileArchetypes in src/lib/archetypes.js). Profiles are summed
+ * per archetype, and their matchups stored once per pair (archetypeA < archetypeB), flipped to
+ * that side when needed.
  */
 function toArchetypes({ profiles, archetypeMatchups }) {
   if (!profiles?.length) return { archetypes: null, archetypeMatchups: null };
@@ -62,9 +69,13 @@ function toArchetypes({ profiles, archetypeMatchups }) {
       colors: p.colors,
       games: 0,
       wins: 0,
+      copies: new Map(),
     };
     a.games += p.gamesPlayed;
     a.wins += p.wins;
+    for (const [cardId, n] of Object.entries(p.centroidCounts ?? {})) {
+      a.copies.set(cardId, (a.copies.get(cardId) ?? 0) + n * p.gamesPlayed);
+    }
     archetypes.set(p.archetypeId, a);
   }
 
@@ -100,7 +111,16 @@ function toArchetypes({ profiles, archetypeMatchups }) {
   }
 
   return {
-    archetypes: [...archetypes.values()].sort((x, y) => y.games - x.games),
+    archetypes: [...archetypes.values()]
+      .map(({ copies, ...a }) => ({
+        ...a,
+        // Average copies per card, by card id (named before the week is written)
+        cards: [...copies]
+          .map(([cardId, n]) => [cardId, Math.round((100 * n) / (a.games || 1)) / 100])
+          .filter(([, n]) => n >= MIN_AVERAGE_COPIES)
+          .sort((x, y) => y[1] - x[1]),
+      }))
+      .sort((x, y) => y.games - x.games),
     // Same shape as `matchups`, so both are summed the same way
     archetypeMatchups: [...pairs.values()].map(({ firstPlayerWins, ...row }) => ({
       ...row,
@@ -170,8 +190,12 @@ async function collectQueue(id) {
   let written = 0;
   for (const week of weeks) {
     const stored = await readWeek(id, week.startDate);
-    // Weeks stored before the archetypes were kept are fetched once more to add them
-    const complete = stored && 'archetypes' in stored;
+    // Weeks stored before the archetypes (or their average lists) were kept are fetched once
+    // more to add them
+    const complete =
+      stored &&
+      'archetypes' in stored &&
+      (stored.archetypes ?? []).every((a) => Array.isArray(a.cards));
     // Filtered by rank, the stored count is lower than availableWeeks' one: compare like for like
     if (complete && (stored.weekGames ?? stored.totalGames) === week.totalGames) continue;
 
@@ -190,7 +214,13 @@ async function collectQueue(id) {
       throw new Error(`Unexpected response for ${week.startDate}: ${scope}`);
     }
 
-    await writeWeek(id, toSnapshot(id, week, res));
+    const snapshot = toSnapshot(id, week, res);
+    // The archetypes' average lists by card name, as tournament decklists and profiles.json have them
+    const archetypes = snapshot.archetypes ?? [];
+    const names = await cardNames(archetypes.flatMap((a) => a.cards.map(([cardId]) => cardId)));
+    for (const a of archetypes)
+      a.cards = a.cards.map(([cardId, n]) => [names[cardId] ?? cardId, n]);
+    await writeWeek(id, snapshot);
     written++;
     console.log(`  ${week.startDate}  ${res.data.activity.totalGames} games`);
   }
@@ -262,15 +292,20 @@ async function cardNames(ids) {
  * cluster of lists; several make an archetype): its archetype, its average list and signature
  * cards by name. Per ink pair, the cards whose players did the best and the worst
  * (`pairCardLift`: with the rank filter, the API gives it by ink pair only, not by profile).
- * Outside the API's stable contract, like the archetypes: nothing is written when it's missing.
+ * Per archetype (by slug), its opening hands (see openings). Outside the API's stable contract,
+ * like the archetypes: nothing is written when it's missing.
  */
 async function saveProfiles(id, data) {
   const profiles = (data.profiles ?? []).filter((p) => p.archetypeId && p.centroidCounts);
   if (!profiles.length) return;
   const pairLift = Object.entries(data.pairCardLift ?? {});
+  const opening = data.archetypeOpening ?? {};
   const ids = [
     ...profiles.flatMap((p) => [...Object.keys(p.centroidCounts), ...(p.signatureCards ?? [])]),
     ...pairLift.flatMap(([, cards]) => cards.map((c) => c.cardId)),
+    ...[opening.cardsOnPlay, opening.cardsOnDraw].flatMap((byProfile) =>
+      Object.values(byProfile ?? {}).flatMap((cards) => Object.keys(cards)),
+    ),
   ];
   const names = await cardNames(ids);
   const name = (cardId) => names[cardId] ?? cardId;
@@ -300,8 +335,55 @@ async function saveProfiles(id, data) {
         })),
       ]),
     ),
+    openings: openings(profiles, opening, name),
   });
   console.log(`  ${profiles.length} archetype profiles written`);
+}
+
+// Below this many opening hands holding a card (over an archetype's profiles), it's left out
+const MIN_OPENINGS = 20;
+
+/**
+ * Opening hands per archetype (by slug, its stable key) and seat: for each card, the games it was
+ * in the opening hand, kept at the mulligan or sent back, each with the games won, as compact
+ * rows [card, inOpener, inOpenerWon, kept, keptWon, tossed, tossedWon], most seen first. The API
+ * gives them per profile (`archetypeOpening`, kept to the rank filter when `rankScoped`), under
+ * ids only valid within one response: summed here, over each archetype's profiles.
+ */
+function openings(profiles, opening, name) {
+  const slugOf = new Map(profiles.map((p) => [p.id, p.archetypeSlug ?? p.archetypeId]));
+  const result = {};
+  for (const [seat, byProfile] of [
+    ['play', opening.cardsOnPlay],
+    ['draw', opening.cardsOnDraw],
+  ]) {
+    for (const [profile, cards] of Object.entries(byProfile ?? {})) {
+      const slug = slugOf.get(profile);
+      if (!slug) continue;
+      result[slug] ??= { play: new Map(), draw: new Map() };
+      const sums = result[slug][seat];
+      for (const [cardId, c] of Object.entries(cards)) {
+        const row = sums.get(cardId) ?? [0, 0, 0, 0, 0, 0];
+        const counts = [c.inOpenerN, c.inOpenerWonN, c.keptN, c.keptWonN, c.tossedN, c.tossedWonN];
+        counts.forEach((n, i) => (row[i] += n ?? 0));
+        sums.set(cardId, row);
+      }
+    }
+  }
+  return Object.fromEntries(
+    Object.entries(result).map(([slug, seats]) => [
+      slug,
+      Object.fromEntries(
+        Object.entries(seats).map(([seat, sums]) => [
+          seat,
+          [...sums]
+            .filter(([, row]) => row[0] >= MIN_OPENINGS)
+            .sort((a, b) => b[1][0] - a[1][0])
+            .map(([cardId, row]) => [name(cardId), ...row]),
+        ]),
+      ),
+    ]),
+  );
 }
 
 const failed = [];
