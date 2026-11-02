@@ -856,7 +856,7 @@ function sheetCard() {
   const { figure, body } = card(
     'sheet',
     deck ? `Fiche matchups : ${deckLabel(deck)}` : 'Fiche matchups',
-    `Ses adversaires les plus attendus d’abord. Win rates par partie au ladder, ramenés vers la moyenne quand l’échantillon est mince, puis en match${edge ? `, avec votre niveau (${edge > 0 ? '+' : ''}${edge} points)` : ''} ; « Cartes clés » : ce qui distingue leurs listes en tournoi ; « Poids » : ce que le matchup ajoute ou retire au win rate contre le field, en points.`,
+    `Ses adversaires les plus attendus d’abord. Win rates par partie au ladder, ramenés vers la moyenne quand l’échantillon est mince, puis en match${edge ? `, avec votre niveau (${edge > 0 ? '+' : ''}${edge} points)` : ''} ; « Cartes clés » : ${view() === VIEWS.archetypes ? 'les cartes signature de l’archétype au ladder' : 'ce qui distingue leurs listes en tournoi'} ; « Poids » : ce que le matchup ajoute ou retire au win rate contre le field, en points.`,
   );
   if (!deck) return figure;
   const title = body.querySelector('.card-title');
@@ -944,7 +944,9 @@ function sheetCard() {
         {
           label: 'Cartes clés',
           title:
-            'Dans au moins la moitié de leurs listes, et le moins dans celles des autres decks',
+            view() === VIEWS.archetypes
+              ? 'Les cartes signature de l’archétype au ladder (celles de sa liste la plus jouée)'
+              : 'Dans au moins la moitié de leurs listes, et le moins dans celles des autres decks',
         },
         { label: 'Plan de jeu', print: true },
       ],
