@@ -218,6 +218,31 @@ export function reconcileArchetypes(
 }
 
 /**
+ * A card name as both sources can agree on it: Lorcanahunter and Lorcast don't always write a
+ * name alike ("Mamá Imelda" and "Mama Imelda", "Like a Bird in the Sky" and "Like A Bird In the
+ * Sky"), so accents, case and curly apostrophes are left out.
+ */
+const cardKey = (name) =>
+  name
+    .normalize('NFD')
+    .replace(/\p{Diacritic}/gu, '')
+    .replace(/[‘’ʼ]/g, "'")
+    .toLowerCase();
+
+/** A profile's average list by cardKey, computed once per profile. */
+const profileCopies = new WeakMap();
+function copiesOf(profile) {
+  if (!profileCopies.has(profile)) {
+    const copies = new Map();
+    for (const [name, n] of profile.cards) {
+      copies.set(cardKey(name), (copies.get(cardKey(name)) ?? 0) + n);
+    }
+    profileCopies.set(profile, copies);
+  }
+  return profileCopies.get(profile);
+}
+
+/**
  * The ladder archetype of a tournament decklist: the key of the one whose average list (of one of
  * its profiles, same inks) shares the most cards with it, copies counted, if at least
  * `minShared`. Null otherwise. Cached on the list.
@@ -228,13 +253,15 @@ const archetypeCache = new WeakMap();
 export function listArchetype(list, profiles, minShared = config.archetypes.listShared) {
   if (archetypeCache.has(list)) return archetypeCache.get(list).id;
   const copies = new Map();
-  for (const c of list.cards) copies.set(c.name, (copies.get(c.name) ?? 0) + c.quantity);
+  for (const c of list.cards) {
+    copies.set(cardKey(c.name), (copies.get(cardKey(c.name)) ?? 0) + c.quantity);
+  }
   const inks = deckKey([...list.deck.colors].sort());
   let best = null;
   for (const p of profiles) {
     if (deckKey(p.colors) !== inks) continue;
     let shared = 0;
-    for (const [name, n] of p.cards) shared += Math.min(n, copies.get(name) ?? 0);
+    for (const [name, n] of copiesOf(p)) shared += Math.min(n, copies.get(name) ?? 0);
     if (!best || shared > best.shared) best = { shared, id: p.archetypeId, variant: p.variant };
   }
   const found = best && best.shared >= minShared ? best : { id: null, variant: null };

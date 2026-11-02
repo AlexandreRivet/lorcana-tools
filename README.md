@@ -131,7 +131,8 @@ under several.
   them.
 - `listArchetype` gives a tournament decklist the archetype whose average list shares the most
   cards with it, if at least `config.archetypes.listShared`; otherwise its ink pair's "Autres
-  listes".
+  listes". Names are compared without accents or case: Lorcanahunter and Lorcast don't always
+  write them alike ("Mamá Imelda", "Mama Imelda").
 
 ## Tournaments
 
