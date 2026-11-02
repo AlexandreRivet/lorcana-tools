@@ -13,9 +13,10 @@ Weekly tracking of the Lorcana meta from the public statistics of
 
 The page is one tool of a small site whose homepage lists them, each in its own folder: the meta
 page in `meta/`, a [proxy generator](#proxy-generator) in `proxies/`, which prints a
-dreamborn.ink deck to try it before buying the cards, and the weekly podcast in `podcast/`: the
+dreamborn.ink deck to try it before buying the cards, the weekly podcast in `podcast/`: the
 episodes, each with its transcript scrolling along with the audio and links to the meta page on
-the week it covers.
+the week it covers, and the [tournaments page](#tournaments) in `tournaments/`, from
+Lorcanahunter's results.
 
 The code and docs are in English; the charts, the page and the Discord message are in French,
 for the team. Decks are shown by their two ink chips (coloured-circle emoji in the Discord
@@ -94,6 +95,60 @@ keeps that set's name.
 In BO3 queues the API counts decks and matchups in **matches** (and `activity.totalGames` in
 single games): win rates are match win rates, and every count is shown as "matchs".
 
+## Tournaments
+
+`tournaments/` looks at the big paper tournaments rather than the ladder: the core tournaments of
+the last 14 days with more than 75 players, from the
+[Lorcanahunter developer API](https://lorcanahunter.com/developers/reference). Every morning,
+`npm run collect:tournaments` stores each one's standings with the players' decks (inks and
+archetype) and their lists when public in `data/lorcanahunter/`; no player names are kept. Each
+card is stored once per tournament and each list as [card, copies] pairs, so a 700-player
+tournament stays around 100 kB.
+
+| Card                       | What it shows                                                                                                               |
+| -------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| Ligne de départ et top cut | Two donuts: each deck's share of the players, then of the top cut. The 8 most played one by one, the others as "Autres"     |
+| Conversion au top cut      | Share of each deck's players who made the top cut, with its 95% interval, against the field's rate                          |
+| Conversion tour par tour   | Each bracket round down to the final: share of each deck's players still in who go through, against the field's rate        |
+| Matchups rencontrés        | One deck's opponents: share of its matches, meetings per player, win rate with its 95% interval, by ink pair                |
+| Cartes du top cut          | One deck's top-cut lists, card by card: in every list, in at least half of them ("proches"), or fewer (possible tech cards) |
+| Tournois retenus           | The tournaments counted, with their top cut                                                                                 |
+
+Lorcanahunter's archetypes are ink pairs, so the page also tells the builds apart: on loading,
+every public list of the period is sorted into sub-archetypes, ink pair by ink pair. Lists are
+grouped while they share, on average, at least half their cards (`subArchetypeShared`, copies
+counted), and each group is named after its two signature cards, in its lists and the rarest in
+every other list.
+
+The starting field, the conversion and the rounds have an inks / archetypes / sub-archetypes
+switch. By sub-archetype, a player without a public list is left out, and a tournament only counts
+when at least half its players outside the top cut published theirs (`minListShare`): the top
+cut's lists are all public, so lists of a thin share of the others would put nearly every listed
+player in it. The switch's tooltip names the tournaments left out. The card analysis has an inks / archetypes
+switch and offers each deck's sub-archetypes in its picker.
+
+For one build, the card analysis also gives a median list to play: each card at its median
+copies over the lists (a missing card counting 0), then copies added or removed where the mean is
+the farthest until the deck has the lists' median size (60 at least), with the real list closest
+to it. A copy button gives it as "4 Angel - Siren Singer" lines, the format deck builders import. Players whose deck is unknown (private decklists), or by archetype not recognised, are
+left out of the shares, and the cards say how many are kept.
+
+Once a top cut is played, the standings follow the bracket (winner, finalist, semi-finalists…),
+so reaching the top N is finishing N-th or better; each round only counts the tournaments whose
+bracket went through it.
+
+The top cut is the one the results flag (`isTopCut`). A tournament without one gets the largest
+power of 2 up to one player in 8 of its announced players (top 8 from 76 to 127 players, top 16
+from 128 to 255), marked "supposé": never played, it is left out of the rounds. The window, the player threshold, that ratio and the card tiers live in
+`config.tournaments` ([src/config.js](src/config.js)).
+
+The API only gives each player's record, not who they played: "Matchups rencontrés" reads the
+`matchups` of a tournament (rows of deck, opponent, matches, wins, by ink pair) and says so when
+none of them has any. The collector never writes them until Lorcanahunter exposes pairings.
+It needs an application approved by Lorcanahunter (scopes `tournaments:read` and `decks:read`):
+its credentials go in `.env` locally and in the repository secrets for the daily run (see
+[GitHub setup](#github-setup)), which skips the step until they are set.
+
 ## Proxy generator
 
 `proxies/` turns a public [dreamborn.ink](https://dreamborn.ink) deck into a PDF to print: paste
@@ -130,10 +185,14 @@ npm run digest     # out/digest/bo1/ and bo3/ (--theme light, --week 2026-09-27,
 3. For the podcast, store the API keys the same way: `gh secret set ANTHROPIC_API_KEY` and
    `gh secret set OPENAI_API_KEY`. Without them the podcast steps fail and the charts go out
    alone.
-4. Optional: **Settings → Pages → Source: GitHub Actions** to publish the page. On a private
+4. For the tournaments page, create an application on
+   [Lorcanahunter's developer space](https://lorcanahunter.com/profile/developer) with the
+   `tournaments:read` and `decks:read` scopes, then `gh secret set LORCANAHUNTER_CLIENT_ID` and
+   `gh secret set LORCANAHUNTER_CLIENT_SECRET`. Without them the daily run skips the tournaments.
+5. Optional: **Settings → Pages → Source: GitHub Actions** to publish the page. On a private
    repo this needs GitHub Pro, and the published site is public. Without Pages, the deploy job
    fails but the Discord message still goes out, without a link.
-5. **Actions → Weekly Discord report → Run workflow** to test: the episode then stays in the
+6. **Actions → Weekly Discord report → Run workflow** to test: the episode then stays in the
    run's artifact; tick "Post to Discord and publish the podcast episode" to send the messages
    and commit the episode.
 
@@ -143,18 +202,19 @@ Locally, `npm run post:discord` reads the webhook from `.env` (see `.env.example
 
 ## Scripts
 
-| Command                  | Purpose                                                           |
-| ------------------------ | ----------------------------------------------------------------- |
-| `npm run collect`        | Stores finished weeks that are missing or have changed            |
-| `npm run digest`         | Renders one digest (images + message) per format                  |
-| `npm run post:discord`   | Posts the podcast, then the charts, to Discord                    |
-| `npm run podcast:script` | Writes the podcast script with Claude (`ANTHROPIC_API_KEY`)       |
-| `npm run podcast:audio`  | Reads the script aloud into an MP3 (`OPENAI_API_KEY`, ffmpeg)     |
-| `npm run costs`          | Local API costs dashboard, never published (admin keys in `.env`) |
-| `npm run dev`            | Web page locally                                                  |
-| `npm run build`          | Static build into `dist/`                                         |
-| `npm run check:api`      | API smoke test + payload summary                                  |
-| `npm run format`         | Prettier formatting                                               |
+| Command                       | Purpose                                                           |
+| ----------------------------- | ----------------------------------------------------------------- |
+| `npm run collect`             | Stores finished weeks that are missing or have changed            |
+| `npm run collect:tournaments` | Stores the Lorcanahunter tournaments of the window (`.env` keys)  |
+| `npm run digest`              | Renders one digest (images + message) per format                  |
+| `npm run post:discord`        | Posts the podcast, then the charts, to Discord                    |
+| `npm run podcast:script`      | Writes the podcast script with Claude (`ANTHROPIC_API_KEY`)       |
+| `npm run podcast:audio`       | Reads the script aloud into an MP3 (`OPENAI_API_KEY`, ffmpeg)     |
+| `npm run costs`               | Local API costs dashboard, never published (admin keys in `.env`) |
+| `npm run dev`                 | Web page locally                                                  |
+| `npm run build`               | Static build into `dist/`                                         |
+| `npm run check:api`           | API smoke test + payload summary                                  |
+| `npm run format`              | Prettier formatting                                               |
 
 ## Notes on the data
 
@@ -189,7 +249,8 @@ scripts/               collection, digest, podcast script and audio, Discord pos
 web/                   site (Vite): homepage, common.css shared by every page, one folder per tool
 web/meta/              meta page
 web/proxies/           proxy generator
+web/tournaments/       tournaments page (Lorcanahunter)
 web/podcast/           podcast playlist; episode/ plays one, its transcript following the audio
-data/                  collected data and podcast episodes (committed)
+data/                  collected data, Lorcanahunter tournaments and podcast episodes (committed)
 assets/fonts/          Inter (OFL) for PNG rendering
 ```

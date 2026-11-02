@@ -18,6 +18,9 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+    env:
+      # Only whether the secret is set: the secrets themselves go to the one step that needs them
+      HAS_LORCANAHUNTER: ${{ secrets.LORCANAHUNTER_CLIENT_ID != '' }}
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-node@v5
@@ -28,6 +31,16 @@ jobs:
 
       - name: Collect the weeks (the current one included)
         run: npm run collect
+
+      # Skipped until the Lorcanahunter API credentials are stored as secrets; a failure keeps
+      # the duels.ink data going out.
+      - name: Collect the tournaments (Lorcanahunter)
+        if: env.HAS_LORCANAHUNTER == 'true'
+        continue-on-error: true
+        env:
+          LORCANAHUNTER_CLIENT_ID: ${{ secrets.LORCANAHUNTER_CLIENT_ID }}
+          LORCANAHUNTER_CLIENT_SECRET: ${{ secrets.LORCANAHUNTER_CLIENT_SECRET }}
+        run: npm run collect:tournaments
 
       - name: Commit the data
         run: |

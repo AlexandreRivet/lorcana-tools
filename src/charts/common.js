@@ -57,9 +57,12 @@ export function header(svg, { title, subtitle, theme }) {
   return PAD + 60;
 }
 
-/** Source line, required by the API's terms. Returns the final height. */
-export function footer(svg, { y, theme, updatedAt, sampleSize, unit, note }) {
-  const source = `Source : ${SOURCE_URL.replace('https://', '')} · données du ${formatUpdatedAt(
+/**
+ * Source line, required by the API's terms. Returns the final height. `source` replaces the
+ * duels.ink line, for charts drawn from another source.
+ */
+export function footer(svg, { y, theme, updatedAt, sampleSize, unit, note, source }) {
+  source ??= `Source : ${SOURCE_URL.replace('https://', '')} · données du ${formatUpdatedAt(
     updatedAt,
   )} · ${formatCount(sampleSize, unit)}`;
   let line = y;

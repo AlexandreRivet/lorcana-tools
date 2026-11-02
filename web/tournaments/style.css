@@ -1,0 +1,180 @@
+/* Same cards, key figures, switches, tables and tooltip as the meta page */
+@import '../meta/style.css';
+
+/* The cards drawn in HTML rather than SVG: card analysis, tournaments list, on the full width */
+.card-html {
+  grid-column: 1 / -1;
+}
+
+/* Wide tables scroll inside their card rather than widening the page */
+.charts > .card,
+.tier {
+  min-width: 0;
+}
+
+.card-html .card-control {
+  min-width: 0;
+}
+
+.card-html .card-control select {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.tiers {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 460px), 1fr));
+  gap: 0 32px;
+}
+
+.card-body {
+  padding: 20px 24px 8px;
+}
+
+.card-title {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.card-title .chip {
+  width: 14px;
+  height: 14px;
+}
+
+.card-subtitle,
+.card-note,
+.tier-hint {
+  margin: 4px 0 0;
+  color: var(--text-2);
+}
+
+.card-html .card-controls {
+  padding-bottom: 4px;
+}
+
+.tier {
+  margin-top: 20px;
+}
+
+.tier h3 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.tier-hint {
+  font-size: 13px;
+}
+
+.card-html table {
+  margin-top: 8px;
+  border-collapse: collapse;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.card-html th,
+.card-html td {
+  padding: 4px 16px 4px 0;
+  border-bottom: 1px solid var(--grid);
+  text-align: left;
+}
+
+.card-html th {
+  color: var(--text-2);
+  font-weight: 500;
+}
+
+.card-html .table-view {
+  margin-top: 12px;
+}
+
+/* Share of the lists playing a card: thin bar, then the count */
+.presence {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.presence-track {
+  width: 80px;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--grid);
+  overflow: hidden;
+}
+
+.presence-fill {
+  display: block;
+  height: 100%;
+  border-radius: 3px;
+  background: var(--accent);
+}
+
+/* Median list: copies, cost, then the card, in columns */
+.median {
+  margin-top: 20px;
+}
+
+.median-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+}
+
+.median-head h3 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.button-secondary {
+  font: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 4px 12px;
+  cursor: pointer;
+}
+
+.button-secondary:hover,
+.button-secondary:focus-visible {
+  border-color: var(--accent);
+}
+
+.median-cards {
+  columns: 3 260px;
+  column-gap: 32px;
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+
+.median-cards li {
+  display: flex;
+  gap: 10px;
+  padding: 3px 0;
+  border-bottom: 1px solid var(--grid);
+  break-inside: avoid;
+}
+
+.median-copies {
+  width: 2em;
+  font-weight: 600;
+}
+
+.median-cost {
+  width: 1.2em;
+  color: var(--text-2);
+}

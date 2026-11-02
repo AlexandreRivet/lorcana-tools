@@ -12,6 +12,7 @@
     "build": "vite build",
     "preview": "vite preview",
     "collect": "node scripts/collect.js",
+    "collect:tournaments": "node --env-file-if-exists=.env scripts/collect-tournaments.js",
     "digest": "node scripts/digest.js",
     "post:discord": "node --env-file-if-exists=.env scripts/post-discord.js",
     "check:api": "node scripts/check-api.js",

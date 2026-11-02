@@ -5,6 +5,7 @@
  * data/<queue>/weeks/<start>.json  snapshot of a week (stable fields, plus archetypes if any)
  * data/episodes/index.json         podcast episodes, newest first
  * data/episodes/<start>/           an episode's script.json and episode.mp3
+ * data/lorcanahunter/              Lorcanahunter tournaments (see below)
  */
 import { copyFile, mkdir, readdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
@@ -86,4 +87,36 @@ export async function writeEpisode(script, audioFile, details) {
   episodes.sort((a, b) => b.week.startDate.localeCompare(a.week.startDate));
   await writeJson(indexFile, { episodes }, { pretty: true });
   return path.relative(process.cwd(), dir);
+}
+
+/**
+ * Lorcanahunter tournaments, served at the site root like the queues:
+ * data/lorcanahunter/index.json          the stored tournaments and the last collection's window
+ * data/lorcanahunter/events/<id>.json    one tournament: standings, decks, top-cut decklists
+ */
+const TOURNAMENTS_DIR = path.join(DATA_DIR, 'lorcanahunter');
+
+export const readTournamentIndex = () => readJson(path.join(TOURNAMENTS_DIR, 'index.json'));
+
+export const writeTournamentIndex = (index) =>
+  writeJson(path.join(TOURNAMENTS_DIR, 'index.json'), index, { pretty: true });
+
+export const readTournament = (id) => readJson(path.join(TOURNAMENTS_DIR, 'events', `${id}.json`));
+
+export const writeTournament = (event) =>
+  writeJson(path.join(TOURNAMENTS_DIR, 'events', `${event.id}.json`), event);
+
+export async function readAllTournaments() {
+  let files;
+  try {
+    files = await readdir(path.join(TOURNAMENTS_DIR, 'events'));
+  } catch (error) {
+    if (error.code === 'ENOENT') return [];
+    throw error;
+  }
+  return Promise.all(
+    files
+      .filter((f) => f.endsWith('.json'))
+      .map((f) => readJson(path.join(TOURNAMENTS_DIR, 'events', f))),
+  );
 }

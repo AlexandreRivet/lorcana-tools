@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light dark" />
+    <title>Tournois Lorcana</title>
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <main class="page">
+      <header class="page-header">
+        <a class="back-link" href="../">← Tous les outils</a>
+        <h1>Tournois</h1>
+        <p id="subtitle" class="subtitle">Chargement des données…</p>
+      </header>
+
+      <section id="kpis" class="kpis" aria-label="Chiffres clés"></section>
+
+      <section id="charts" class="charts"></section>
+
+      <footer class="page-footer">
+        Résultats et decklists ©
+        <a href="https://lorcanahunter.com">Lorcanahunter</a>, collectés chaque matin depuis leur
+        API développeurs. <span id="cut-rule"></span>
+      </footer>
+    </main>
+    <div id="tooltip" class="tooltip" role="status" hidden></div>
+    <script type="module" src="./main.js"></script>
+  </body>
+</html>

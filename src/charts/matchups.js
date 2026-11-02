@@ -41,7 +41,7 @@ function luminance(color) {
 }
 
 /** White or black text, whichever contrasts more with the fill. */
-function inkOn(fill) {
+export function inkOn(fill) {
   const l = luminance(fill);
   const contrastWhite = 1.05 / (l + 0.05);
   const contrastBlack = (l + 0.05) / (luminance('#0b0b0b') + 0.05);
