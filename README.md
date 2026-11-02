@@ -218,7 +218,8 @@ top cut by points then a seeded bracket. Players differ by their deck alone (no 
 no rematch avoidance), except the team's: "Votre niveau" gives our players an edge on a deck, in
 points of game win rate over its average player (+5: 55 % in an even game, every rate moved as
 much in log-odds). On such a deck, `teamShare` of its simulated players play with the edge and
-its figures are theirs. Every setting, the overrides, the edges and the deck shown are in the URL,
+its figures are theirs. Swiss matches end in a draw `drawRate` of the time (4 %, as in the big
+tournaments of October 2026), worth a point each. Every setting, the overrides, the edges and the deck shown are in the URL,
 to share a scenario.
 
 Every win rate against the field, and the Day 2 and top-cut chances, come with their range (90 %

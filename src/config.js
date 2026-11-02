@@ -96,8 +96,11 @@ export const config = {
     /** Best of: swiss matches, top-cut matches. */
     swissBestOf: 3,
     topCutBestOf: 5,
-    /** Share of swiss matches drawn (time called), as a fraction. */
-    drawRate: 0,
+    /**
+     * Share of swiss matches drawn (time called), as a fraction: 4 to 4.5 % in the big tournaments
+     * of October 2026 (Lorcanahunter's records).
+     */
+    drawRate: 0.04,
     /** Forecast field: weight of the tournaments against the ladder's last weeks, 0 to 1. */
     tournamentWeight: 0.6,
     /** Ladder weeks (BO1, last finished first) whose play rates feed the forecast. */
