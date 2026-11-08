@@ -1,0 +1,185 @@
+{
+  "week": {
+    "startDate": "2026-11-01",
+    "endDate": "2026-11-07"
+  },
+  "formats": [
+    {
+      "format": "bo1",
+      "queue": "core-bo1@set-14-core+legendary",
+      "queueName": "Core Set 14 BO1 · Legendary et plus"
+    },
+    {
+      "format": "bo3",
+      "queue": "core-bo3@set-14-core+legendary",
+      "queueName": "Core Set 14 BO3 · Legendary et plus"
+    }
+  ],
+  "model": "claude-sonnet-5-5",
+  "title": "Les Detectives défient le Midrange",
+  "summary": "Semaine du 1er au 7 novembre : en best-of-one, Detectives jaune-bleu grimpe vite mais bute sur Midrange vert-gris. En best-of-three, Circle of Life jaune-vert décroche. L'épisode est généré automatiquement à partir des statistiques de duels.ink.",
+  "lines": [
+    {
+      "speaker": "camille",
+      "text": "Bonjour à toutes et à tous, c'est le point meta de Disney Lorcana pour la semaine du 1er au 7 novembre, tiré des statistiques de duels.ink. Sacha est là, avec ses échantillons dans la poche.",
+      "start": 0,
+      "end": 12.01
+    },
+    {
+      "speaker": "sacha",
+      "text": "Et Camille avec ses intuitions. Beaucoup de monde cette semaine : 60 541 parties en best-of-one, en hausse de 9 %, et 3 867 matchs en best-of-three, en hausse de 26,9 %.",
+      "start": 12.36,
+      "end": 27.86
+    },
+    {
+      "speaker": "camille",
+      "text": "On commence par le best-of-one. Côté couleurs, jaune-vert reste la paire la plus jouée, 18,3 %, mais en baisse nette. Et juste derrière, vert-gris à 18 %, qui a le meilleur taux de victoire, 52 %.",
+      "start": 28.21,
+      "end": 45.47
+    },
+    {
+      "speaker": "sacha",
+      "text": "Alors que jaune-vert, à 50,4 %, n'est pas distinguable de 50. Le plus joué n'est pas le meilleur. Le vrai mouvement, c'est jaune-bleu : presque 3 points de plus, 16,9 % de jeu.",
+      "start": 45.82,
+      "end": 61.29
+    },
+    {
+      "speaker": "camille",
+      "text": "Jaune-bleu, ça sent les Detectives. Detectives jaune-bleu, 12,1 % de jeu. Il y a quatre semaines, ils étaient à 4,8 %. Concrètement, en face, tu en croises un toutes les huit parties, et ça monte encore.",
+      "start": 61.64,
+      "end": 78.2
+    },
+    {
+      "speaker": "sacha",
+      "text": "Avec 51,7 % de victoire, au-dessus de 50, mais stable. Et regarde le matchup : Midrange vert-gris les bat 55,8 % du temps, sur 6 118 parties. Ça me semble un plafond.",
+      "start": 78.55,
+      "end": 92.41
+    },
+    {
+      "speaker": "camille",
+      "text": "Ah, le rabat-joie est de retour. Midrange vert-gris, c'est 17,6 % de jeu, 52,1 % de victoire, rien ne bouge. Tout le monde le joue et tout le monde le croise.",
+      "start": 92.76,
+      "end": 106.08
+    },
+    {
+      "speaker": "sacha",
+      "text": "Oui, mais regarde l'ordre de jeu. Midrange vert-gris gagne 60,2 % en commençant et 43 % en jouant en second. Le premier joueur gagne 57,6 % en best-of-one, et ce deck amplifie l'effet. Circle of Life jaune-vert, lui, tient mieux : 9,3 points d'écart seulement.",
+      "start": 106.43,
+      "end": 130.02
+    },
+    {
+      "speaker": "camille",
+      "text": "Ou alors, c'est qu'il a le tempo pour lui, et que ça se paie. Moi, je prends ça. Un deck qui gagne quand il commence, je le joue le soir sur le ladder.",
+      "start": 130.37,
+      "end": 139.78
+    },
+    {
+      "speaker": "sacha",
+      "text": "Tu le prends, mais tu perds une partie sur deux en jouant en second. Ce n'est pas la même chose que tenir 52 %.",
+      "start": 140.13,
+      "end": 147.17
+    },
+    {
+      "speaker": "camille",
+      "text": "Bon. Mon vrai coup de cœur, c'est Remember Merida jaune-violet : 64,8 % contre Circle of Life jaune-vert, sur 2 425 parties. Le meilleur matchup du tableau.",
+      "start": 147.52,
+      "end": 162.29
+    },
+    {
+      "speaker": "sacha",
+      "text": "Sauf que Remember Merida jaune-violet recule, de 7,3 % à 5,4 %, avec un taux de victoire de 50,7 %, pas distinguable de 50. Et 40,6 % en jouant en second. Mon hypothèse : les joueurs ont vu ce que Detectives jaune-bleu lui fait, 61,8 % pour eux.",
+      "start": 162.64,
+      "end": 185.16
+    },
+    {
+      "speaker": "camille",
+      "text": "Pendant que Circle of Life jaune-vert remonte, avec 13,8 % de jeu, en hausse nette. Il vit sur le dos des decks qui ne le battent pas.",
+      "start": 185.51,
+      "end": 197.2
+    },
+    {
+      "speaker": "sacha",
+      "text": "Il fait 49,8 % de victoire : pas distinguable de 50. Et Ruby R.E.D. vert-rouge, 5,2 % de jeu, en hausse nette, est en dessous de 50 avec 48,7 %. Detectives jaune-bleu la bat 63,4 % sur 1 422 parties. Côté matchups, rien de net n'a bougé cette semaine.",
+      "start": 197.55,
+      "end": 220.35
+    },
+    {
+      "speaker": "camille",
+      "text": "Passons au best-of-three. Là, on change de ton.",
+      "start": 220.7,
+      "end": 224.74
+    },
+    {
+      "speaker": "sacha",
+      "text": "Oui, vert-gris prend la tête : 20,9 % de jeu, plus 2,8 points. Jaune-vert baisse nettement, 20,5 %, et son taux de victoire de 48,2 % n'est pas distinguable de 50. Et jaune-bleu a le meilleur taux de victoire, 52,8 %, au-dessus de 50.",
+      "start": 225.09,
+      "end": 245.56
+    },
+    {
+      "speaker": "camille",
+      "text": "Et jaune-gris bondit de 3,1 points, à 4,8 %. J'adore.",
+      "start": 245.91,
+      "end": 251.84
+    },
+    {
+      "speaker": "sacha",
+      "text": "Moi, je note surtout 46,6 % de victoire, pas distinguable de 50. Un bond de jeu, ce n'est pas une preuve de force.",
+      "start": 252.19,
+      "end": 261.48
+    },
+    {
+      "speaker": "camille",
+      "text": "Côté archétypes, Midrange vert-gris prend 4,1 points : 20,8 % de jeu, en hausse nette. Detectives jaune-bleu est à 18,3 %, avec 53,6 % de victoire, au-dessus de 50.",
+      "start": 261.83,
+      "end": 279.42
+    },
+    {
+      "speaker": "sacha",
+      "text": "Et la vraie surprise, c'est Circle of Life jaune-vert. 48,6 % de victoire, contre 53,2 % la semaine d'avant : une baisse nette de 4,6 points. En best-of-one, il tenait. En trois manches, on dirait qu'il a été plus facile de le contrer. C'est une hypothèse.",
+      "start": 279.77,
+      "end": 298.9
+    },
+    {
+      "speaker": "camille",
+      "text": "Le best-of-three, ça punit les decks pas assez violents, je l'ai toujours dit.",
+      "start": 299.25,
+      "end": 303.95
+    },
+    {
+      "speaker": "sacha",
+      "text": "Tu l'as toujours dit, mais regarde : le premier joueur gagne 53,5 % en best-of-three, contre 57,6 % en best-of-one. L'avantage se tasse. Sauf que Midrange vert-gris fait encore 60,9 % en commençant, 41,8 % en jouant en second. Lui, le format ne le gomme pas.",
+      "start": 304.3,
+      "end": 327.32
+    },
+    {
+      "speaker": "camille",
+      "text": "Princess Aggro jaune-vert gagne 1 point de jeu, 3,5 %, avec 50,4 % de victoire. Petit, mais agressif, ça me plaît.",
+      "start": 327.67,
+      "end": 338.07
+    },
+    {
+      "speaker": "sacha",
+      "text": "Petit surtout. Remember Merida jaune-violet n'est qu'à 3,9 %, 46,8 % de victoire, pas distinguable de 50. Et pour les matchups, il n'y a pas assez de parties en best-of-three : je ne conclus rien.",
+      "start": 338.42,
+      "end": 351.95
+    },
+    {
+      "speaker": "camille",
+      "text": "Pour la semaine prochaine, je surveille Detectives jaune-bleu. S'il continue de grimper, je dis que Midrange vert-gris devra lui laisser la place.",
+      "start": 352.3,
+      "end": 360.76
+    },
+    {
+      "speaker": "sacha",
+      "text": "Et moi je dis que Midrange vert-gris est son pire cauchemar. Je surveillerai Circle of Life jaune-vert en best-of-three : est-ce que ces 48,6 % se confirment ou est-ce un accident ?",
+      "start": 361.11,
+      "end": 374.93
+    },
+    {
+      "speaker": "camille",
+      "text": "On verra bien qui a raison. Cet épisode est généré automatiquement à partir des statistiques de duels.ink, voix comprises. À dimanche prochain.",
+      "start": 375.28,
+      "end": 382.65
+    }
+  ]
+}

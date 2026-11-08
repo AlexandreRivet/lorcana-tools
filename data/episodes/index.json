@@ -2,6 +2,31 @@
   "episodes": [
     {
       "week": {
+        "startDate": "2026-11-01",
+        "endDate": "2026-11-07"
+      },
+      "title": "Les Detectives défient le Midrange",
+      "summary": "Semaine du 1er au 7 novembre : en best-of-one, Detectives jaune-bleu grimpe vite mais bute sur Midrange vert-gris. En best-of-three, Circle of Life jaune-vert décroche. L'épisode est généré automatiquement à partir des statistiques de duels.ink.",
+      "formats": [
+        {
+          "format": "bo1",
+          "queue": "core-bo1@set-14-core+legendary",
+          "queueName": "Core Set 14 BO1 · Legendary et plus"
+        },
+        {
+          "format": "bo3",
+          "queue": "core-bo3@set-14-core+legendary",
+          "queueName": "Core Set 14 BO3 · Legendary et plus"
+        }
+      ],
+      "duration": 383,
+      "audio": "2026-11-01/episode.mp3",
+      "script": "2026-11-01/script.json",
+      "scriptModel": "claude-sonnet-5-5",
+      "voiceModel": "gpt-4o-mini-tts"
+    },
+    {
+      "week": {
         "startDate": "2026-10-25",
         "endDate": "2026-10-31"
       },
