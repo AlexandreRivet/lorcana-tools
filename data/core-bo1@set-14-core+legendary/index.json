@@ -68,8 +68,15 @@
       "startDate": "2026-11-01",
       "endDate": "2026-11-07",
       "label": "Nov 1 - 7, 2026",
-      "totalGames": 55129,
-      "updatedAt": "2026-11-07T06:32:28.295Z"
+      "totalGames": 60541,
+      "updatedAt": "2026-11-08T06:32:38.331Z"
+    },
+    {
+      "startDate": "2026-11-08",
+      "endDate": "2026-11-14",
+      "label": "Nov 8 - 14, 2026",
+      "totalGames": 1515,
+      "updatedAt": "2026-11-08T06:32:40.486Z"
     }
   ]
 }
